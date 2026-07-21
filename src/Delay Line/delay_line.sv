@@ -23,9 +23,15 @@ module delay_line (
     //SIPO shifting (Shift Register)
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            for (int i=1; i<=16; i++) sipo_top[i]<=16'd0;
-            sipo_mid<=16'd0;
-            for (int i=1; i<=15; i++) sipo_bot[i]<=16'd0;
+            sipo_top[1]<=0; sipo_top[2]<=0; sipo_top[3]<=0; sipo_top[4]<=0;
+            sipo_top[5]<=0; sipo_top[6]<=0; sipo_top[7]<=0; sipo_top[8]<=0;
+            sipo_top[9]<=0; sipo_top[10]<=0; sipo_top[11]<=0; sipo_top[12]<=0;
+            sipo_top[13]<=0; sipo_top[14]<=0; sipo_top[15]<=0; sipo_top[16]<=0;
+            sipo_mid<=0;
+            sipo_bot[1]<=0; sipo_bot[2]<=0; sipo_bot[3]<=0; sipo_bot[4]<=0;
+            sipo_bot[5]<=0; sipo_bot[6]<=0; sipo_bot[7]<=0; sipo_bot[8]<=0;
+            sipo_bot[9]<=0; sipo_bot[10]<=0; sipo_bot[11]<=0; sipo_bot[12]<=0;
+            sipo_bot[13]<=0; sipo_bot[14]<=0; sipo_bot[15]<=0;
         end
         else if (shift_en) begin
             //Shift top (16x16)
