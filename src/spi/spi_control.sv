@@ -46,7 +46,7 @@ module spi_control #(
                 cs_n = 1'b1;
                 busy = 1'b0;
                 
-                if (start && !tx_empty) begin
+                if (start) begin
                     next_state = LOAD_ST;
                 end
             end
