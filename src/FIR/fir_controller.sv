@@ -43,15 +43,8 @@ module fir_controller (
     // pass truncated 16-bit to MAC (MAC only takes 16 bit X)
     assign mac_x = pre_adder_out[15:0];
     
-    always_comb begin
-        if (calc_cnt < 16) begin
-            mac_c = coeff_mem[calc_cnt];
-            sel = calc_cnt[3:0];
-        end else begin
-            mac_c = 16'd0;
-            sel = 4'd0;
-        end
-    end
+    assign mac_c = (calc_cnt < 16) ? coeff_mem[calc_cnt] : 16'd0;
+    assign sel   = (calc_cnt < 16) ? calc_cnt[3:0]       : 4'd0;
     
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
