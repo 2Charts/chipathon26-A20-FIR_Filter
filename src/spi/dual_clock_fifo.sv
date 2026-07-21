@@ -58,10 +58,10 @@ module dual_clock_fifo # (
     end
 
     always_comb begin
-        read_ptr_bin_wr[ADDR_WIDTH] = read_ptr_gray_sync[1][ADDR_WIDTH];
-        for (int i = ADDR_WIDTH-1; i >= 0; i--) begin
-            read_ptr_bin_wr[i] = read_ptr_bin_wr[i+1] ^ read_ptr_gray_sync[1][i];
-        end
+        read_ptr_bin_wr[3] = read_ptr_gray_sync[1][3];
+        read_ptr_bin_wr[2] = read_ptr_bin_wr[3] ^ read_ptr_gray_sync[1][2];
+        read_ptr_bin_wr[1] = read_ptr_bin_wr[2] ^ read_ptr_gray_sync[1][1];
+        read_ptr_bin_wr[0] = read_ptr_bin_wr[1] ^ read_ptr_gray_sync[1][0];
     end
 
     assign wr_fill_count = write_ptr - read_ptr_bin_wr;
@@ -103,10 +103,10 @@ module dual_clock_fifo # (
     end
 
     always_comb begin
-        write_ptr_bin_rd[ADDR_WIDTH] = write_ptr_gray_sync[1][ADDR_WIDTH];
-        for (int i = ADDR_WIDTH-1; i >= 0; i--) begin
-            write_ptr_bin_rd[i] = write_ptr_bin_rd[i+1] ^ write_ptr_gray_sync[1][i];
-        end
+        write_ptr_bin_rd[3] = write_ptr_gray_sync[1][3];
+        write_ptr_bin_rd[2] = write_ptr_bin_rd[3] ^ write_ptr_gray_sync[1][2];
+        write_ptr_bin_rd[1] = write_ptr_bin_rd[2] ^ write_ptr_gray_sync[1][1];
+        write_ptr_bin_rd[0] = write_ptr_bin_rd[1] ^ write_ptr_gray_sync[1][0];
     end
 
     assign rd_fill_count  = write_ptr_bin_rd - read_ptr;
