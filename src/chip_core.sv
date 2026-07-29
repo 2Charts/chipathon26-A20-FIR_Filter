@@ -44,25 +44,67 @@ module chip_core #(
     assign input_pu = '0;
     assign input_pd = '0;
 
-    // Drive the bidir pads as outputs (CMOS buffer, fast slew).
-    assign bidir_oe = '1;
+    wire uart_rx;
+    wire mosi;
+    wire miso;
+    wire sck;
+    wire cs_n;
+    wire data_ready;
+
+    // Map inputs to bidir_in
+    // Pin 5: uart_rx (bidir 0)
+    // Pin 6: mosi (bidir 1)
+    // Pin 8: sck (bidir 3)
+    // Pin 9: cs_n (bidir 4)
+    assign uart_rx = bidir_in[0];
+    assign mosi    = bidir_in[1];
+    assign sck     = bidir_in[3];
+    assign cs_n    = bidir_in[4];
+
+    // Map outputs to bidir_out
+    // Pin 7: miso (bidir 2)
+    // Pin 10: data_ready (bidir 5)
+    assign bidir_out[0] = 1'b0;
+    assign bidir_out[1] = 1'b0;
+    assign bidir_out[2] = miso;
+    assign bidir_out[3] = 1'b0;
+    assign bidir_out[4] = 1'b0;
+    assign bidir_out[5] = data_ready;
+
+    // Output enable: 1 for outputs, 0 for inputs
+    assign bidir_oe[0] = 1'b0;
+    assign bidir_oe[1] = 1'b0;
+    assign bidir_oe[2] = 1'b1;
+    assign bidir_oe[3] = 1'b0;
+    assign bidir_oe[4] = 1'b0;
+    assign bidir_oe[5] = 1'b1;
+
+    // Tie off the remaining bidir pads
+    genvar i;
+    generate
+        for (i = 6; i < NUM_BIDIR_PADS; i++) begin : gen_tie_off
+            assign bidir_out[i] = 1'b0;
+            assign bidir_oe[i]  = 1'b0;
+        end
+    endgenerate
+
+    // Other bidir controls (common)
     assign bidir_cs = '0;
     assign bidir_sl = '0;
     assign bidir_ie = ~bidir_oe;
     assign bidir_pu = '0;
     assign bidir_pd = '0;
 
-    // Keep synthesis from optimising bidir_in / input_in away.
-    logic _unused;
-    assign _unused = &{1'b0, bidir_in, input_in};
-
-    // Free-running counter, width equal to the number of bidir pads.
-    logic [NUM_BIDIR_PADS-1:0] count;
-    always_ff @(posedge clk) begin
-        if (!rst_n) count <= '0;
-        else        count <= count + 1;
-    end
-    assign bidir_out = count;
+    system_top u_system_top (
+        .clk(clk),
+        .rst_n(rst_n),
+        .sck(sck),
+        .cs_n(cs_n),
+        .mosi(mosi),
+        .miso(miso),
+        .uart_rx(uart_rx),
+        .data_ready(data_ready)
+    );
 
 endmodule
 

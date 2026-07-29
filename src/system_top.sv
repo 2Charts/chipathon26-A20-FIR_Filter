@@ -3,22 +3,18 @@ module system_top (
     input logic rst_n,
     
     // spi interface
-    output logic sck,
-    output logic cs_n,
-    output logic mosi,
-    input logic miso,
+    input logic sck,
+    input logic cs_n,
+    input logic mosi,
+    output logic miso,
     
     // uart for config
-    input logic uart_rx,
-    
-    // trigger to start spi
-    input logic spi_start
+    input logic uart_rx
 );
 
     // some basic params
     localparam SPI_DATA_WIDTH = 16;
     localparam FIFO_DEPTH = 8;
-    localparam CLK_DIV = 4;
     localparam CLKS_PER_BIT = 434; // standard 
     
     // uart to config regs
@@ -28,7 +24,7 @@ module system_top (
     logic coeff_valid;
     
     // config regs to datapath
-    logic [15:0] coeff_mem [0:15];
+    logic [255:0] coeff_mem_flat;
     logic mode_odd;
     logic mode_asym;
     
@@ -75,9 +71,9 @@ module system_top (
         .coeff_addr(coeff_addr),
         .filter_mode(filter_mode),
         .coeff_valid(coeff_valid),
+        .coeff_mem_flat(coeff_mem_flat),
         .mode_odd(mode_odd),
-        .mode_asym(mode_asym),
-        .coeff_mem(coeff_mem)
+        .mode_asym(mode_asym)
     );
     
     // state machine that runs the fir
@@ -96,10 +92,11 @@ module system_top (
         .pre_adder_out(pre_adder_out),
         .mac_valid(mac_valid),
         .mac_clear(mac_clear),
+        
         .mac_x(mac_x),
         .mac_c(mac_c),
         .mac_y(mac_y),
-        .coeff_mem(coeff_mem)
+        .coeff_mem_flat(coeff_mem_flat)
     );
     
     // the folded delay line
@@ -126,11 +123,10 @@ module system_top (
         .done()
     );
     
-    // our AXI wrapped spi
+    // our AXI wrapped spi slave
     spi_axi_top #(
         .DATA_WIDTH(SPI_DATA_WIDTH),
-        .FIFO_DEPTH(FIFO_DEPTH),
-        .CLK_DIV(CLK_DIV)
+        .FIFO_DEPTH(FIFO_DEPTH)
     ) spi_inst (
         .clk(clk),
         .rst_n(rst_n),
@@ -140,8 +136,6 @@ module system_top (
         .m_axis_tdata(spi_to_fir_tdata),
         .m_axis_tvalid(spi_to_fir_tvalid),
         .m_axis_tready(spi_to_fir_tready),
-        .start(spi_start),
-        .busy(),
         .sck(sck),
         .cs_n(cs_n),
         .mosi(mosi),

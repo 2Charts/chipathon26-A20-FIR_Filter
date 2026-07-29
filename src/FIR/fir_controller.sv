@@ -26,7 +26,7 @@ module fir_controller (
     input  logic signed [15:0] mac_y,
     
     // Config Regs
-    input  logic [15:0] coeff_mem [0:15]
+    input  logic [255:0] coeff_mem_flat
 );
 
     typedef enum logic [1:0] {IDLE, CALC, WAIT_AXI} state_t;
@@ -43,7 +43,7 @@ module fir_controller (
     // pass truncated 16-bit to MAC (MAC only takes 16 bit X)
     assign mac_x = pre_adder_out[15:0];
     
-    assign mac_c = (calc_cnt < 16) ? coeff_mem[calc_cnt] : 16'd0;
+    assign mac_c = (calc_cnt < 16) ? coeff_mem_flat[calc_cnt*16 +: 16] : 16'd0;
     assign sel   = (calc_cnt < 16) ? calc_cnt[3:0]       : 4'd0;
     
     always_ff @(posedge clk or negedge rst_n) begin
@@ -62,21 +62,28 @@ module fir_controller (
             case (state)
                 IDLE: begin
                     mac_valid <= 1'b0;
+                    mac_clear <= 1'b0;
                     if (s_axis_tvalid && s_axis_tready) begin
                         shift_en <= 1'b1;
                         sample_reg <= s_axis_tdata; // hold for the 16th cycle
                         state <= CALC;
                         calc_cnt <= 5'd0;
+                        mac_valid <= 1'b1;
+                        mac_clear <= 1'b1;
                     end
                 end
                 
                 CALC: begin
-                    mac_valid <= 1'b1;
-                    mac_clear <= (calc_cnt == 5'd1); // clear accumulator on cycle 1
-                    
-                    if (calc_cnt == 5'd16) begin
+                    if (calc_cnt < 5'd15) begin
+                        mac_valid <= 1'b1;
+                        mac_clear <= 1'b0;
+                    end else begin
                         mac_valid <= 1'b0;
                         mac_clear <= 1'b0;
+                    end
+                    
+                    // Wait for 3 extra cycles for the 2-stage MAC pipeline to flush
+                    if (calc_cnt == 5'd19) begin
                         m_axis_tdata <= mac_y; // grab final result
                         m_axis_tvalid <= 1'b1;
                         state <= WAIT_AXI;

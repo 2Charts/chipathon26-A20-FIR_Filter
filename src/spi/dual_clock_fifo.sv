@@ -1,5 +1,5 @@
 module dual_clock_fifo # (
-    parameter DATA_WIDTH = 32,
+    parameter DATA_WIDTH = 16,
     parameter DATA_DEPTH = 8,
     parameter ADDR_WIDTH = $clog2(DATA_DEPTH)
 ) (
@@ -21,116 +21,48 @@ module dual_clock_fifo # (
     input  logic                  wr_clk_i,
     input  logic                  wr_rst_n_i
 );
-    // Memory array
-    logic [DATA_WIDTH-1:0] memory [0:DATA_DEPTH-1];
-
-    // Write-side signals
-    logic [ADDR_WIDTH:0] read_ptr_gray_sync [2];
-    logic [ADDR_WIDTH:0] read_ptr_bin_wr;
-    logic [ADDR_WIDTH:0] wr_fill_count;
-    logic write_full;
-    logic internal_write_enable;
-    logic [ADDR_WIDTH:0] write_ptr;
-    logic [ADDR_WIDTH:0] write_ptr_gray;
-
-    // Read-side signals
-    logic [ADDR_WIDTH:0] write_ptr_gray_sync [2];
-    logic [ADDR_WIDTH:0] write_ptr_bin_rd;
-    logic [ADDR_WIDTH:0] rd_fill_count;
-    logic read_empty;
-    logic internal_read_enable;
-    logic [ADDR_WIDTH:0] read_ptr;
-    logic [ADDR_WIDTH:0] read_ptr_gray;
-
-
-    // ==========================================
-    // WRITE CLOCK DOMAIN
-    // ==========================================
+    // Because we are using an oversampling SPI Slave architecture, 
+    // both clocks are actually connected to the same system `clk`.
+    // We can safely implement this as a simple synchronous FWFT FIFO!
     
-    always_ff @(posedge wr_clk_i) begin
-        if (!wr_rst_n_i) begin
-            read_ptr_gray_sync[0] <= 0;
-            read_ptr_gray_sync[1] <= 0;
-        end else begin
-            read_ptr_gray_sync[0] <= read_ptr_gray;
-            read_ptr_gray_sync[1] <= read_ptr_gray_sync[0];
-        end
-    end
-
-    always_comb begin
-        read_ptr_bin_wr[3] = read_ptr_gray_sync[1][3];
-        read_ptr_bin_wr[2] = read_ptr_bin_wr[3] ^ read_ptr_gray_sync[1][2];
-        read_ptr_bin_wr[1] = read_ptr_bin_wr[2] ^ read_ptr_gray_sync[1][1];
-        read_ptr_bin_wr[0] = read_ptr_bin_wr[1] ^ read_ptr_gray_sync[1][0];
-    end
-
-    assign wr_fill_count = write_ptr - read_ptr_bin_wr;
+    logic [DATA_WIDTH-1:0] mem [0:DATA_DEPTH-1];
+    logic [ADDR_WIDTH:0] count;
+    logic [ADDR_WIDTH-1:0] wr_ptr;
+    logic [ADDR_WIDTH-1:0] rd_ptr;
     
-    assign write_full    = (write_ptr_gray[ADDR_WIDTH:ADDR_WIDTH-1] == ~read_ptr_gray_sync[1][ADDR_WIDTH:ADDR_WIDTH-1]) && 
-                           (write_ptr_gray[ADDR_WIDTH-2:0] == read_ptr_gray_sync[1][ADDR_WIDTH-2:0]);
+    assign full_o = (count == DATA_DEPTH);
+    assign empty_o = (count == 0);
+    assign almost_full_o = (count >= DATA_DEPTH - 1);
+    assign almost_empty_o = (count <= 1);
     
-    assign almost_full_o = (wr_fill_count >= (DATA_DEPTH - 1));
-    assign full_o        = write_full;
-
-    assign write_ptr_gray        = write_ptr ^ (write_ptr >> 1);
-    assign internal_write_enable = wr_en_i & ~write_full;
-
-    always_ff @(posedge wr_clk_i) begin : WRITE_POINTER
-        if (!wr_rst_n_i) begin
-            write_ptr <= 0;
-        end
-        else if (internal_write_enable) begin
-            memory[write_ptr[ADDR_WIDTH-1:0]] <= wr_data_i;
-            write_ptr <= write_ptr + 1;
-        end
-    end
-
-    assign wr_count_o = write_ptr[ADDR_WIDTH-1:0];
-
-
-    // ==========================================
-    // READ CLOCK DOMAIN
-    // ==========================================
-
-    always_ff @(posedge rd_clk_i) begin
+    // FWFT read
+    assign rd_data_o = mem[rd_ptr];
+    
+    assign wr_count_o = wr_ptr;
+    assign rd_count_o = rd_ptr;
+    
+    logic write_act, read_act;
+    assign write_act = wr_en_i && !full_o;
+    assign read_act = rd_en_i && !empty_o;
+    
+    always_ff @(posedge rd_clk_i or negedge rd_rst_n_i) begin
         if (!rd_rst_n_i) begin
-            write_ptr_gray_sync[0] <= 0;
-            write_ptr_gray_sync[1] <= 0;
+            count <= '0;
+            wr_ptr <= '0;
+            rd_ptr <= '0;
         end else begin
-            write_ptr_gray_sync[0] <= write_ptr_gray;
-            write_ptr_gray_sync[1] <= write_ptr_gray_sync[0];
+            if (write_act && read_act) begin
+                mem[wr_ptr] <= wr_data_i;
+                wr_ptr <= wr_ptr + 1'b1;
+                rd_ptr <= rd_ptr + 1'b1;
+            end else if (write_act) begin
+                mem[wr_ptr] <= wr_data_i;
+                wr_ptr <= wr_ptr + 1'b1;
+                count <= count + 1'b1;
+            end else if (read_act) begin
+                rd_ptr <= rd_ptr + 1'b1;
+                count <= count - 1'b1;
+            end
         end
     end
-
-    always_comb begin
-        write_ptr_bin_rd[3] = write_ptr_gray_sync[1][3];
-        write_ptr_bin_rd[2] = write_ptr_bin_rd[3] ^ write_ptr_gray_sync[1][2];
-        write_ptr_bin_rd[1] = write_ptr_bin_rd[2] ^ write_ptr_gray_sync[1][1];
-        write_ptr_bin_rd[0] = write_ptr_bin_rd[1] ^ write_ptr_gray_sync[1][0];
-    end
-
-    assign rd_fill_count  = write_ptr_bin_rd - read_ptr;
-
-    assign read_empty     = (read_ptr_gray == write_ptr_gray_sync[1]); 
-    
-    assign almost_empty_o = (rd_fill_count <= 1);
-    assign empty_o        = read_empty;
-
-    // Pointer logic
-    assign read_ptr_gray        = read_ptr ^ (read_ptr >> 1);
-    assign internal_read_enable = rd_en_i & ~read_empty;
-
-    always_ff @(posedge rd_clk_i) begin : READ_POINTER
-        if (!rd_rst_n_i) begin
-            read_ptr  <= 0;
-            rd_data_o <= 0;
-        end
-        else if (internal_read_enable) begin
-            rd_data_o <= memory[read_ptr[ADDR_WIDTH-1:0]];
-            read_ptr  <= read_ptr + 1;
-        end
-    end
-
-    assign rd_count_o = read_ptr[ADDR_WIDTH-1:0];
-
 endmodule
