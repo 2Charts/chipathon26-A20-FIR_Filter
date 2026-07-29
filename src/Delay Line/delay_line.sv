@@ -15,79 +15,43 @@ module delay_line (
     input  logic        mode_asym //1:Asy, 0:sym
 );
 
-    //SIPO processing 16x16, 16x1, 16x15
-    logic [15:0] sipo_top [1:16]; //Taps 31-16
-    logic [15:0] sipo_mid; //Center tap
-    logic [15:0] sipo_bot [1:15]; // Taps 15-1
+    logic signed [15:0] shift_reg [0:31];
 
-    //SIPO shifting (Shift Register)
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            sipo_top[1]<=0; sipo_top[2]<=0; sipo_top[3]<=0; sipo_top[4]<=0;
-            sipo_top[5]<=0; sipo_top[6]<=0; sipo_top[7]<=0; sipo_top[8]<=0;
-            sipo_top[9]<=0; sipo_top[10]<=0; sipo_top[11]<=0; sipo_top[12]<=0;
-            sipo_top[13]<=0; sipo_top[14]<=0; sipo_top[15]<=0; sipo_top[16]<=0;
-            sipo_mid<=0;
-            sipo_bot[1]<=0; sipo_bot[2]<=0; sipo_bot[3]<=0; sipo_bot[4]<=0;
-            sipo_bot[5]<=0; sipo_bot[6]<=0; sipo_bot[7]<=0; sipo_bot[8]<=0;
-            sipo_bot[9]<=0; sipo_bot[10]<=0; sipo_bot[11]<=0; sipo_bot[12]<=0;
-            sipo_bot[13]<=0; sipo_bot[14]<=0; sipo_bot[15]<=0;
-        end
-        else if (shift_en) begin
-            //Shift top (16x16)
-            sipo_top[1]<=data_in;
-            for (int i=2; i<=16; i++) sipo_top[i]<=sipo_top[i-1];
-            
-            //Shift mid (16x1)
-            sipo_mid <= sipo_top[16];
-
-            //Shift bottom (16x15)
-            if (mode_odd==1'b1) begin
-                sipo_bot[1]<=sipo_mid; //if odd, take from mid
-            end else begin
-                sipo_bot[1]<=sipo_top[16]; //if even, straight from top
+            for (int i=0; i<32; i++) begin
+                shift_reg[i] <= 16'd0;
             end
-            
-            //shifting for bottom
-            for (int i=2; i<=15; i++) sipo_bot[i]<=sipo_bot[i-1];
+        end else if (shift_en) begin
+            shift_reg[0] <= data_in;
+            for (int i=1; i<32; i++) begin
+                shift_reg[i] <= shift_reg[i-1];
+            end
         end
     end
 
-    //16:1 multiplexer logic part
-    logic [15:0] mux_top;
-    logic [15:0] mux_bot;
-    logic [15:0] mux_bot_routed;
-
-    always_comb begin
-        //top mux (Taps 31-16)
-        mux_top=sipo_top[16-sel]; 
-
-        //bottom mux (Taps 15-1 dan data_in)
-        if (sel==4'd15) begin
-            mux_bot=data_in;
-        end else begin
-            mux_bot=sipo_bot[15-sel];
-        end
-        
-        //'0' for odd mode
-        if (mode_odd==1'b1 && sel==4'd15) begin
-            mux_bot_routed=16'd0;
-        end else begin
-            mux_bot_routed=mux_bot;
-        end
-    end
-
-    //assymetric logic using XOR and 2's Complement
-    logic [15:0] bot_xor;
+    logic [4:0] idx1, idx2;
+    assign idx1 = 15 - sel;
+    assign idx2 = 16 + sel;
     
+    logic signed [15:0] bot_val;
     always_comb begin
-        if (mode_asym==1'b1) begin
-            bot_xor=~mux_bot_routed; //asymmetric mode
+        if (mode_odd && sel == 4'd0) begin
+            bot_val = 16'd0; // Center tap has no pair
         end else begin
-            bot_xor=mux_bot_routed;  //symmetric mode
+            bot_val = shift_reg[idx2];
         end
     end
+    
+    logic signed [15:0] bot_routed;
+    always_comb begin
+        if (mode_asym) begin
+            bot_routed = -bot_val;
+        end else begin
+            bot_routed = bot_val;
+        end
+    end
+    
+    assign pre_adder_out = shift_reg[idx1] + bot_routed;
 
-    //pre-adder process part 
-    assign pre_adder_out = {mux_top[15], mux_top[15], mux_top}+{bot_xor[15], bot_xor[15], bot_xor}+mode_asym; 
 endmodule
