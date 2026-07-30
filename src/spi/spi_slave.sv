@@ -49,10 +49,10 @@ module spi_slave (
 
     // SPI start, end & active from CS signal
     logic spi_start;
-    logic spi_end;
+    //logic spi_end;
     logic spi_active;
     assign spi_start  = (sync_cs_n[2:1] == 2'b10) ? 1'b1 : 1'b0; // start on CS falling edge
-    assign spi_end    = (sync_cs_n[2:1] == 2'b01) ? 1'b1 : 1'b0; // end on CS rising edge
+    //assign spi_end    = (sync_cs_n[2:1] == 2'b01) ? 1'b1 : 1'b0; // end on CS rising edge
     assign spi_active = ~sync_cs_n[1]; // SPI CS active low
 
     // clean SPI data lines
@@ -62,13 +62,20 @@ module spi_slave (
     assign miso_o = spi_active ? miso : 1'bz;
 
     logic [15:0] sreg;
+    logic [4:0]  bit_cnt;
 
     always_ff @(posedge clk) begin
+        tx_rd_en_o <= 1'b0;
+        rx_wr_en_o <= 1'b0;
+
         if (!rst_n) begin
-            sreg <= 0;
-            miso <= 0;
+            sreg    <= 0;
+            miso    <= 0;
+            bit_cnt <= 0;
         end
         else if (spi_start) begin
+            bit_cnt <= 0;
+            
             if (tx_empty_i) begin
                 sreg <= 0;
                 miso <= 0;
@@ -79,14 +86,19 @@ module spi_slave (
             end
         end
         else if (spi_active && sck_re) begin
-            sreg <= {sreg[15:1], mosi};
+            sreg <= {sreg[14:0], mosi};
+            
+            if (bit_cnt < 5'd16) begin
+                bit_cnt <= bit_cnt + 5'd1;
+            end
+
+            if (bit_cnt == 5'd15) begin
+                tx_rd_en_o <= 1'b1;
+                rx_wr_en_o <= 1'b1;
+            end
         end
         else if (spi_active && sck_fe) begin
             miso <= sreg[15];
-        end
-        else if (spi_end) begin
-            tx_rd_en_o <= 1'b1;
-            rx_wr_en_o <= 1'b1;
         end
     end
 

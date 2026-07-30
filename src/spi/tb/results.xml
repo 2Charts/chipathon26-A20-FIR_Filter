@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1785408369" />
+    <testcase name="test_full_duplex_traffic" classname="tb_spi" file="/foss/designs/chipathon26-A20-FIR_Filter/src/spi/tb/tb_spi.py" lineno="115" time="0.17169857025146484" sim_time_ns="10190.0" ratio_time="59348.19366914946" />
+  </testsuite>
+</testsuites>

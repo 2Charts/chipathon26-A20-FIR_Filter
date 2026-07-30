@@ -1,0 +1,14 @@
+=== SPI-AXIS Simulation Results ===
+
+--- MISO Path (AXI Stream -> SPI) ---
+AXIS TX Data (Injected) : ['0xcb76', '0xc49c', '0x6ffa', '0x84b', '0xfd56']
+SPI RX Data  (Sampled)  : ['0xcb76', '0xc49c', '0x6ffa', '0x84b', '0xfd56']
+Path Status: PASSED
+
+--- MOSI Path (SPI -> AXI Stream) ---
+SPI TX Data  (Injected) : ['0x1d50', '0x9f2', '0xc367', '0x9b6a', '0xe6cf']
+AXIS RX Data (Sampled)  : ['0x1d50', '0x9f2', '0xc367', '0x9b6a', '0xe6cf']
+Path Status: PASSED
+
+===================================
+OVERALL STATUS: PASSED
