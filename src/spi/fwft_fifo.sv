@@ -1,4 +1,4 @@
-module fifo # (
+module fwft_fifo # (
     parameter DATA_WIDTH = 16,
     parameter DATA_DEPTH = 8,
     parameter ADDR_WIDTH = $clog2(DATA_DEPTH)
