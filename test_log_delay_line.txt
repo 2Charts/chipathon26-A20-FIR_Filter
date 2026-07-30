@@ -1,0 +1,17 @@
+Usage: make [target]
+
+Available targets:
+  help                 Show this help message
+  all                  Build the project (runs LibreLane)
+  clone-pdk            Clone the GF180MCU PDK repository
+  librelane            Run LibreLane flow (synthesis, PnR, verification)
+  librelane-nodrc      Run LibreLane flow without DRC checks
+  librelane-klayoutdrc Run LibreLane flow without magic DRC checks
+  librelane-magicdrc   Run LibreLane flow without KLayout DRC checks
+  librelane-openroad   Open the last run in OpenROAD
+  librelane-klayout    Open the last run in KLayout
+  librelane-padring    Only create the padring
+  sim                  Run RTL simulation with cocotb
+  sim-gl               Run gate-level simulation with cocotb (after copy-final)
+  sim-view             View simulation waveforms in GTKWave
+  render-image         Render an image from the final layout (after copy-final)

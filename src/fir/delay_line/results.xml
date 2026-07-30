@@ -1,0 +1,10 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1785423594" />
+    <testcase name="test_symmetric_even" classname="tb_delay_line" file="/workspace/src/delay_line/tb_delay_line.py" lineno="128" time="0.026777029037475586" sim_time_ns="366.0" ratio_time="13668.43197905815" />
+    <testcase name="test_symmetric_odd" classname="tb_delay_line" file="/workspace/src/delay_line/tb_delay_line.py" lineno="133" time="0.013936996459960938" sim_time_ns="366.0" ratio_time="26261.038456274804" />
+    <testcase name="test_antisymmetric_even" classname="tb_delay_line" file="/workspace/src/delay_line/tb_delay_line.py" lineno="138" time="0.06037712097167969" sim_time_ns="366.0" ratio_time="6061.898846943611" />
+    <testcase name="test_antisymmetric_odd" classname="tb_delay_line" file="/workspace/src/delay_line/tb_delay_line.py" lineno="143" time="0.015017271041870117" sim_time_ns="366.0" ratio_time="24371.93808246146" />
+    <testcase name="test_asymmetric" classname="tb_delay_line" file="/workspace/src/delay_line/tb_delay_line.py" lineno="148" time="0.01428675651550293" sim_time_ns="366.0" ratio_time="25618.131001451864" />
+  </testsuite>
+</testsuites>
