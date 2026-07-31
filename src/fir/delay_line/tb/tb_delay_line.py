@@ -6,9 +6,9 @@ import random
 class DelayLineGoldenModel:
     """Python Delay Line Golden Model for 32-tap FIR architecture"""
     def __init__(self):
-        self.sipo_top = [0] * 16  # Taps 31-16
-        self.sipo_mid = 0         # Center tap
-        self.sipo_bot = [0] * 15  # Taps 15-1
+        self.sipo_top = [0]*16  #Taps 31-16
+        self.sipo_mid = 0         #Center tap
+        self.sipo_bot = [0]*15  #Taps 15-1
 
     def shift(self, data_in, mode_odd):
         bot_in = self.sipo_mid if mode_odd else self.sipo_top[-1]
@@ -44,10 +44,12 @@ class DelayLineGoldenModel:
         else:
             adder_out = top_signed + bot_signed
 
-        adder_out &= 0x3FFFF
+        # Masking disesuaikan untuk 17-bit (0x1FFFF)
+        adder_out &= 0x1FFFF
 
-        if adder_out & (1 << 17):
-            adder_out -= (1 << 18)
+        # Sign extension logic disesuaikan untuk 17-bit
+        if adder_out & (1 << 16):
+            adder_out -= (1 << 17)
 
         return adder_out
 
@@ -62,12 +64,12 @@ async def run_directed_test(dut, mode_config, test_name):
         f.write(f"Start Testing Scenario: {test_name}\n")
         f.write("=" * 60 + "\n\n")
 
-        # Reset DUT
+        # Reset DUT (Penyesuaian nama port input)
         dut.arst_n.value = 0
-        dut.shift_en.value = 0
-        dut.mode_config.value = mode_config
-        dut.data_in.value = 0
-        dut.sel.value = 0
+        dut.shift_en_i.value = 0
+        dut.mode_i.value = mode_config
+        dut.sample_i.value = 0
+        dut.sel_i.value = 0
 
         await RisingEdge(dut.clk)
         await RisingEdge(dut.clk)
@@ -82,13 +84,13 @@ async def run_directed_test(dut, mode_config, test_name):
         for _ in range(32):
             val = random.randint(1, 100)
 
-            dut.data_in.value = val
-            dut.shift_en.value = 1
+            dut.sample_i.value = val
+            dut.shift_en_i.value = 1
 
             await RisingEdge(dut.clk)
             model.shift(val, is_odd_mode)
 
-        dut.shift_en.value = 0
+        dut.shift_en_i.value = 0
         await RisingEdge(dut.clk)
 
         # Print isi delay line
@@ -101,16 +103,17 @@ async def run_directed_test(dut, mode_config, test_name):
 
         # Test selector
         test_data = random.randint(1, 100)
-        dut.data_in.value = test_data
+        dut.sample_i.value = test_data
 
         f.write(f"\nTesting Selector ({test_name})\n")
         f.write("-" * 60 + "\n")
 
         for sel in range(16):
-            dut.sel.value = sel
+            dut.sel_i.value = sel
             await Timer(1, units="ns")
 
-            actual_val = dut.pre_adder_out.value.signed_integer
+            # Penyesuaian nama port output
+            actual_val = dut.sample_o.value.signed_integer
             expected_val = model.get_expected_out(test_data, sel, mode_config)
 
             f.write(
@@ -127,7 +130,7 @@ async def run_directed_test(dut, mode_config, test_name):
 
 @cocotb.test()
 async def test_symmetric_even(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start()) # Diubah dari units ke unit
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start()) 
     await run_directed_test(dut, mode_config=0b100, test_name="Symmetric Even")
 
 @cocotb.test()
