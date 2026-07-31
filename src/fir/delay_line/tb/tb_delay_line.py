@@ -63,7 +63,7 @@ async def run_directed_test(dut, mode_config, test_name):
         f.write("=" * 60 + "\n\n")
 
         # Reset DUT
-        dut.rst.value = 1
+        dut.arst_n.value = 0
         dut.shift_en.value = 0
         dut.mode_config.value = mode_config
         dut.data_in.value = 0
@@ -71,7 +71,7 @@ async def run_directed_test(dut, mode_config, test_name):
 
         await RisingEdge(dut.clk)
         await RisingEdge(dut.clk)
-        dut.rst.value = 0
+        dut.arst_n.value = 1
         await RisingEdge(dut.clk)
 
         is_odd_mode = (mode_config & 1) == 1

@@ -4,14 +4,14 @@ module fir_config (
 
     output  logic [6:0] config_o,
 
-    input   logic       rst_n,
+    input   logic       arst_n,
     input   logic       clk
 );
 
     logic [6:0] config_register;
 
-    always_ff @(posedge clk) begin
-        if (!rst_n) begin
+    always_ff @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             config_register <= 0;
         end
         else if (config_write_i) begin

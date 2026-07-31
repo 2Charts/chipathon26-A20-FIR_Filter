@@ -102,9 +102,9 @@ async def reset_dut(dut):
     dut.mosi_i.value = 0
     
     # Apply reset
-    dut.rst_n.value = 0
+    dut.arst_n.value = 0
     await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
+    dut.arst_n.value = 1
     await ClockCycles(dut.clk, 10)
 
 # -----------------------------------------------------------------------------

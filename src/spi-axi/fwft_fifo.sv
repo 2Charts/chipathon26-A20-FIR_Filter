@@ -12,7 +12,7 @@ module fwft_fifo # (
     output  logic                   empty_o,
     output  logic                   full_o,
 
-    input   logic                   rst_n,
+    input   logic                   arst_n,
     input   logic                   clk
 );
     logic [DATA_WIDTH-1:0] memory [0:DATA_DEPTH-1];
@@ -30,8 +30,8 @@ module fwft_fifo # (
     assign empty_o = empty;
     assign full_o  = full;
 
-    always_ff @(posedge clk) begin : WRITE
-        if (!rst_n) begin
+    always_ff @(posedge clk or negedge arst_n) begin : WRITE
+        if (!arst_n) begin
             wr_ptr <= 0;
         end 
         else if (wr_en_i && !full) begin
@@ -40,8 +40,8 @@ module fwft_fifo # (
         end
     end
 
-    always_ff @(posedge clk) begin
-        if (!rst_n) begin
+    always_ff @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             rd_ptr <= 0;
         end 
         else if (rd_en_i && !empty) begin

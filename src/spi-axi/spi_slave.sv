@@ -13,7 +13,7 @@ module spi_slave (
     output  logic [15:0]    rx_data_o,
     output  logic           rx_wr_en_o,
 
-    input   logic           rst_n,
+    input   logic           arst_n,
     input   logic           clk
 );
     /*
@@ -28,8 +28,8 @@ module spi_slave (
     logic [2:0] sync_cs_n;
     logic [1:0] sync_mosi;
 
-    always_ff @(posedge clk) begin
-        if (!rst_n) begin
+    always_ff @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             sync_sck    <= 0;
             sync_cs_n   <= 0;
             sync_mosi   <= 0;
@@ -64,11 +64,11 @@ module spi_slave (
     logic [15:0] sreg;
     logic [4:0]  bit_cnt;
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge arst_n) begin
         tx_rd_en_o <= 1'b0;
         rx_wr_en_o <= 1'b0;
 
-        if (!rst_n) begin
+        if (!arst_n) begin
             sreg    <= 0;
             miso    <= 0;
             bit_cnt <= 0;

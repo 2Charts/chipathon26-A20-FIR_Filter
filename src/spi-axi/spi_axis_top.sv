@@ -17,7 +17,7 @@ module spi_axis_top #(
     input   logic           mosi_i,
     output  logic           miso_o,
 
-    input   logic           rst_n,
+    input   logic           arst_n,
     input   logic           clk
 );
     logic [15:0] rx_data;
@@ -38,7 +38,7 @@ module spi_axis_top #(
         .empty_o(rx_empty),
         .full_o(),
 
-        .rst_n(rst_n),
+        .arst_n(arst_n),
         .clk(clk)
     );
 
@@ -60,7 +60,7 @@ module spi_axis_top #(
         .empty_o(tx_empty),
         .full_o(tx_full),
 
-        .rst_n(rst_n),
+        .arst_n(arst_n),
         .clk(clk)
     );
 
@@ -79,7 +79,7 @@ module spi_axis_top #(
         .rx_data_o(rx_data),
         .rx_wr_en_o(rx_wr_en),
 
-        .rst_n(rst_n),
+        .arst_n(arst_n),
         .clk(clk)
     );
 

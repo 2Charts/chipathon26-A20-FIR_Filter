@@ -1,6 +1,6 @@
 module delay_line (
     input  logic clk,
-    input  logic rst,
+    input  logic arst_n,
     
     // Datapath part
     input  logic [15:0] data_in,         // Input sample
@@ -35,8 +35,8 @@ module delay_line (
     assign mode_odd_active     = (mode_config[2] == 1'b1) && (mode_config[0] == 1'b1);
 
     // SIPO shifting (Shift Register)
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always_ff @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             for (int i=1; i<=16; i++) sipo_top[i] <= 16'd0;
             sipo_mid <= 16'd0;
             for (int i=1; i<=15; i++) sipo_bot[i] <= 16'd0;
