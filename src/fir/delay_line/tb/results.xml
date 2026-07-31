@@ -1,0 +1,10 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1785465623" />
+    <testcase name="test_symmetric_even" classname="tb_delay_line" file="/foss/designs/chipathon26-A20-FIR_Filter/src/fir/delay_line/tb/tb_delay_line.py" lineno="128" time="0.010834455490112305" sim_time_ns="366.0" ratio_time="33781.11621151773" />
+    <testcase name="test_symmetric_odd" classname="tb_delay_line" file="/foss/designs/chipathon26-A20-FIR_Filter/src/fir/delay_line/tb/tb_delay_line.py" lineno="133" time="0.004889965057373047" sim_time_ns="366.0" ratio_time="74847.16060458313" />
+    <testcase name="test_antisymmetric_even" classname="tb_delay_line" file="/foss/designs/chipathon26-A20-FIR_Filter/src/fir/delay_line/tb/tb_delay_line.py" lineno="138" time="0.005394458770751953" sim_time_ns="366.0" ratio_time="67847.3996287457" />
+    <testcase name="test_antisymmetric_odd" classname="tb_delay_line" file="/foss/designs/chipathon26-A20-FIR_Filter/src/fir/delay_line/tb/tb_delay_line.py" lineno="143" time="0.005098104476928711" sim_time_ns="366.0" ratio_time="71791.3886732451" />
+    <testcase name="test_asymmetric" classname="tb_delay_line" file="/foss/designs/chipathon26-A20-FIR_Filter/src/fir/delay_line/tb/tb_delay_line.py" lineno="148" time="0.004988193511962891" sim_time_ns="366.0" ratio_time="73373.25609406366" />
+  </testsuite>
+</testsuites>
