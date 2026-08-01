@@ -1,0 +1,29 @@
+rm -f results.xml
+"make" -f makefile results.xml
+make[1]: Entering directory '/foss/designs/uartrx'
+rm -f results.xml
+COCOTB_TEST_MODULES=uartrx_tb COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=uart_rx_coeff_loader TOPLEVEL_LANG=verilog \
+         /foss/tools/bin/vvp -M /usr/local/lib/python3.12/dist-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.12.4 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 14.0 (devel)
+     0.00ns INFO     cocotb                             Seeding Python random module with 1785562192
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /usr/local/lib/python3.12/dist-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running uartrx_tb.test_uart_rx (1/1)
+   200.00ns INFO     cocotb.uart_rx_coeff_loader        Sending Byte: 0x5a
+ 85420.00ns INFO     cocotb.uart_rx_coeff_loader        -> [SUCCESS] UART RX received data: 0x5a
+ 89000.00ns INFO     cocotb.uart_rx_coeff_loader        Sending Byte: 0xc3
+173980.00ns INFO     cocotb.uart_rx_coeff_loader        -> [SUCCESS] UART RX received data: 0xc3
+177800.00ns INFO     cocotb.uart_rx_coeff_loader        Sending Byte: 0xff
+263080.00ns INFO     cocotb.uart_rx_coeff_loader        -> [SUCCESS] UART RX received data: 0xff
+266600.00ns INFO     cocotb.uart_rx_coeff_loader        Awesome! All UART RX tests passed successfully (PASS).
+266600.00ns INFO     cocotb.regression                  uartrx_tb.test_uart_rx passed
+266600.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                        ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************
+                                                        ** uartrx_tb.test_uart_rx         PASS      266600.00           0.69     385251.27  **
+                                                        **************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0             266600.00           0.70     379793.16  **
+                                                        **************************************************************************************
+make[1]: Leaving directory '/foss/designs/uartrx'
