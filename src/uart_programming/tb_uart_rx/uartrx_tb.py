@@ -45,13 +45,13 @@ async def test_uart_rx(dut):
             await RisingEdge(dut.data_valid_o)
             rx_byte = int(dut.data_o.value)
             received_data.append(rx_byte)
-            dut._log.info(f"-> [SUCCESS] UART RX received data: 0x{rx_byte:02x}")
+            dut._log.info(f"Received byte: 0x{rx_byte:02x}")
 
     cocotb.start_soon(monitor())
 
     # Send test data
     for byte in test_data:
-        dut._log.info(f"Sending Byte: 0x{byte:02x}")
+        dut._log.info(f"Transmitting byte: 0x{byte:02x}")
         await send_uart_byte(dut, byte, clks_per_bit)
         await Timer(2000, unit="ns")  # Idle time between bytes
 
@@ -61,4 +61,4 @@ async def test_uart_rx(dut):
     for i in range(len(test_data)):
         assert received_data[i] == test_data[i], f"ERROR: Mismatch! Sent 0x{test_data[i]:02x}, but received 0x{received_data[i]:02x}"
 
-    dut._log.info("Awesome! All UART RX tests passed successfully (PASS).")
+    dut._log.info("UART RX tests completed successfully.")
