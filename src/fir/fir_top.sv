@@ -44,12 +44,14 @@ module fir_top (
     /* FIR DATAPATH */
 
     // coefficient data
-    logic [3:0]     coeff_rd_addr;
+    logic [3:0]     coeff_rd_addr; // control
     logic [15:0]    coeff_rd_data;
 
     logic [16:0]    mac_data_input;
-    logic           delay_line_shift;
-    logic [3:0]     delay_line_sel;
+    logic           delay_line_shift;   // control
+    logic [3:0]     delay_line_sel;     // control
+    logic           mac_enable;         // control
+    logic           mac_clear;         // control
 
     regfile coeff_regs (
         .raddr_i(coeff_rd_addr),
@@ -73,6 +75,16 @@ module fir_top (
         .sel_i(delay_line_sel),
         
         .mode_i(delay_line_mode)
+    );
+
+    mac mac (
+        .clk(clk),
+        .arst_n(arst_n),
+        .enable_i(mac_enable),
+        .clear_i(mac_clear),
+        .sample_i(mac_data_input),
+        .coeff_i(coeff_rd_data),
+        .result_o(m_axis_tdata_o)
     );
 
     // add delay line, MAC
