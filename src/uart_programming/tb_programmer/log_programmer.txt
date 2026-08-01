@@ -1,0 +1,24 @@
+=== SCENARIO 1: Configuration Transmission (Randomized) ===
+[INPUT]   UART RX Stream : 0x89 (Random Config Value: 0x9)
+[PROCESS] FSM evaluates byte, decodes configuration data, and asserts write enable.
+[OUTPUT]  config_data_o  : 0x9
+[OUTPUT]  config_wr_en_o : 1
+[STATUS]  Scenario 1 PASSED!
+
+=== SCENARIO 2: Coefficient Transmission (Randomized) ===
+[INPUT]   UART RX Stream : Address = 0x1, Low Byte = 0xb7, High Byte = 0x14
+[PROCESS] FSM captures address in ST_IDLE, receives low byte, and assembles 16-bit data with high byte.
+[OUTPUT]  coeff_addr_o   : 0x1
+[OUTPUT]  coeff_data_o   : 0x14b7
+[OUTPUT]  coeff_wr_en_o  : 1
+[STATUS]  Scenario 2 PASSED!
+
+=== SCENARIO 3: Dynamic Timeout Test ===
+[INPUT]   UART RX Stream : Fake Header (0x09) followed by stalling / idle line
+[PROCESS] FSM hangs, timeout counter triggers a reset back to ST_IDLE, followed by new random transaction.
+[OUTPUT]  coeff_addr_o   : 0xc
+[OUTPUT]  coeff_data_o   : 0xa3d
+[OUTPUT]  coeff_wr_en_o  : 1
+[STATUS]  Scenario 3 PASSED! FSM successfully recovered via timeout.
+
+=== ALL TESTS COMPLETED SUCCESSFULLY ===
