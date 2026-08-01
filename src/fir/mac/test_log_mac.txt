@@ -1,0 +1,71 @@
+rm -f results.xml
+"make" -f makefile results.xml
+make[1]: Entering directory '/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/mac'
+rm -f results.xml
+COCOTB_TEST_MODULES=tb_mac COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=mac TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.14.4 interpreter at /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (stable)
+     0.00ns INFO     cocotb                             Seeding Python random module with 1785561451
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running tb_mac.mac_pipeline_test (1/1)
+                                                            Testbench for Q15 MAC Engine
+     0.00ns WARNING  py.warnings                        /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/mac/tb_mac.py:53: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+     0.00ns WARNING  py.warnings                        /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/mac/tb_mac.py:62: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(20, units="ns")
+    20.00ns INFO     cocotb.mac                         
+                                                        ================================================================================
+                                                        Start Testing Scenario: Basic MAC Operations
+                                                        ================================================================================
+    20.00ns INFO     cocotb.mac                         Test Case    | y (Q1.15)    | Expected     | Status
+    20.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+    70.00ns INFO     cocotb.mac                         Basic        | 12288        | 12288        | PASS
+    70.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+    70.00ns INFO     cocotb.mac                         >>> Basic MAC Operations : 1 PASSED, 0 FAILED
+    70.00ns INFO     cocotb.mac                         
+                                                        ================================================================================
+                                                        Start Testing Scenario: 17-bit Input Handling
+                                                        ================================================================================
+    70.00ns INFO     cocotb.mac                         Test Case    | y (Q1.15)    | Expected     | Status
+    70.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   110.00ns INFO     cocotb.mac                         17-bit Pos   | 24576        | 24576        | PASS
+   150.00ns INFO     cocotb.mac                         17-bit Neg   | -16384       | -16384       | PASS
+   150.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   150.00ns INFO     cocotb.mac                         >>> 17-bit Input Handling : 2 PASSED, 0 FAILED
+   150.00ns INFO     cocotb.mac                         
+                                                        ================================================================================
+                                                        Start Testing Scenario: Rounding Verification
+                                                        ================================================================================
+   150.00ns INFO     cocotb.mac                         Test Case    | y (Q1.15)    | Expected     | Status
+   150.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   190.00ns INFO     cocotb.mac                         Round Up     | 1            | 1            | PASS
+   230.00ns INFO     cocotb.mac                         Round Down   | 0            | 0            | PASS
+   270.00ns INFO     cocotb.mac                         Neg Rnd Up   | 0            | 0            | PASS
+   310.00ns INFO     cocotb.mac                         Neg Rnd Dn   | -1           | -1           | PASS
+   310.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   310.00ns INFO     cocotb.mac                         >>> Rounding Verification : 4 PASSED, 0 FAILED
+   310.00ns INFO     cocotb.mac                         
+                                                        ================================================================================
+                                                        Start Testing Scenario: Saturation Verification
+                                                        ================================================================================
+   310.00ns INFO     cocotb.mac                         Test Case    | y (Q1.15)    | Expected     | Status
+   310.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   370.00ns INFO     cocotb.mac                         Pos Over     | 32767        | 32767        | PASS
+   430.00ns INFO     cocotb.mac                         Neg Over     | -32768       | -32768       | PASS
+   430.00ns INFO     cocotb.mac                         --------------------------------------------------------------------------------
+   430.00ns INFO     cocotb.mac                         >>> Saturation Verification : 2 PASSED, 0 FAILED
+   430.00ns INFO     cocotb.mac                         ================================================================================
+   430.00ns INFO     cocotb.mac                         ALL MAC SCENARIOS PASSED
+   430.00ns INFO     cocotb.mac                         ================================================================================
+   430.00ns INFO     cocotb.regression                  tb_mac.mac_pipeline_test passed
+   430.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                        ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************
+                                                        ** tb_mac.mac_pipeline_test       PASS         430.00           0.02      27322.80  **
+                                                        **************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                430.00           0.02      23967.77  **
+                                                        **************************************************************************************
+make[1]: Leaving directory '/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/mac'
