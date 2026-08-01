@@ -29,8 +29,8 @@ module fir_top (
     // R : Reserved
     logic [6:0]     config_register;
 
-    logic [2:0]     delay_line_sel;
-    assign delay_line_sel = config_register[6:4];
+    logic [2:0]     delay_line_mode;
+    assign delay_line_mode = config_register[6:4];
 
     always_ff @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
@@ -47,6 +47,9 @@ module fir_top (
     logic [3:0]     coeff_rd_addr;
     logic [15:0]    coeff_rd_data;
 
+    logic [16:0]    mac_data_input;
+    logic           delay_line_shift;
+    logic [3:0]     delay_line_sel;
 
     regfile coeff_regs (
         .raddr_i(coeff_rd_addr),
@@ -59,27 +62,18 @@ module fir_top (
         .clk(clk)
     );
 
-    // delay_line delay_line (
-    // input  logic clk,
-    // input  logic arst_n,
-    
-    // // Datapath part
-    // input  logic [15:0] sample_i,         // Input sample
-    // output logic [17:0] sample_o,         // Output from pre-adder
+    delay_line delay_line (
+        .clk(clk),
+        .arst_n(arst_n),
 
-    // // Controlpath part
-    // input  logic        shift_en_i,
-    // input  logic [3:0]  sel_i,             // For MUX sel_iector
-    
-    // // Controlpath mode part (3-bit configuration)
-    // // Mode encoding:
-    // // 0xx -> Asymmetric mode
-    // // 100 -> Symmetric, Even
-    // // 101 -> Symmetric, Odd
-    // // 110 -> Anti-symmetric, Even
-    // // 111 -> Anti-symmetric, Odd
-    // input  logic [2:0]  mode_i 
-    // );
+        .sample_i(s_axis_tdata_i),
+        .sample_o(mac_data_input),
+
+        .shift_en_i(delay_line_shift),
+        .sel_i(delay_line_sel),
+        
+        .mode_i(delay_line_mode)
+    );
 
     // add delay line, MAC
 

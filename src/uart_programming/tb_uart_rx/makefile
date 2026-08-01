@@ -1,10 +1,12 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/uartrx.sv
+VERILOG_SOURCES += ../uart_rx.sv
 
-TOPLEVEL = uart_rx_coeff_loader
+TOPLEVEL = uart_rx
 
 COCOTB_TEST_MODULES = uartrx_tb
+
+WAVES=1
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

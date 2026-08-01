@@ -1,22 +1,22 @@
-`timescale 1ns / 1ps
-
-module uart_rx_coeff_loader #(
-    parameter CLKS_PER_BIT = 434
+module uart_rx #(
+    parameter CLK_FREQ  = 50_000_000,  // Default clock frequency (e.g., 50 MHz)
+    parameter BAUD_RATE = 115200       // Default baud rate
 )(
     input  wire       clk,
-    input  wire       rst,
-    input  wire       rx_serial,
-    output reg [7:0]  prog_data,
-    output reg        prog_valid
+    input  wire       arst_n,
+    input  wire       rx_line_i,
+    output reg [7:0]  data_o,
+    output reg        data_valid_o
 );
 
-    localparam C_RX_DIV = CLKS_PER_BIT / 16;
+    // Calculate the division factor for 16x oversampling
+    localparam C_RX_DIV = CLK_FREQ / (BAUD_RATE * 16);
 
     reg [31:0] rx_baud_counter;
     reg        rx_baud_tick;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             rx_baud_counter <= 0;
             rx_baud_tick    <= 1'b0;
         end else begin
@@ -32,12 +32,12 @@ module uart_rx_coeff_loader #(
 
     reg [1:0] uart_rx_data_sr;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             uart_rx_data_sr <= 2'b11;
         end else begin
             if (rx_baud_tick) begin
-                uart_rx_data_sr[0] <= rx_serial;
+                uart_rx_data_sr[0] <= rx_line_i;
                 uart_rx_data_sr[1] <= uart_rx_data_sr[0];
             end
         end
@@ -46,8 +46,8 @@ module uart_rx_coeff_loader #(
     reg [1:0] uart_rx_filter;
     reg       uart_rx_bit;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             uart_rx_filter <= 2'b11;
             uart_rx_bit    <= 1'b1;
         end else begin
@@ -75,15 +75,15 @@ module uart_rx_coeff_loader #(
     reg [3:0] uart_rx_bit_spacing;
     reg [2:0] uart_rx_count;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
             uart_rx_state       <= ST_RX_START;
             uart_rx_bit_spacing <= 0;
             uart_rx_count       <= 0;
-            prog_data           <= 8'h00;
-            prog_valid          <= 1'b0;
+            data_o           <= 8'h00;
+            data_valid_o          <= 1'b0;
         end else begin
-            prog_valid <= 1'b0;
+            data_valid_o <= 1'b0;
 
             if (rx_baud_tick) begin
                 case (uart_rx_state)
@@ -106,7 +106,7 @@ module uart_rx_coeff_loader #(
                         // Tunggu 15 tick (1 bit penuh) untuk baca bit berikutnya
                         if (uart_rx_bit_spacing == 15) begin
                             uart_rx_bit_spacing <= 0;
-                            prog_data <= {uart_rx_bit, prog_data[7:1]};
+                            data_o <= {uart_rx_bit, data_o[7:1]};
                             
                             if (uart_rx_count < 7) begin
                                 uart_rx_count <= uart_rx_count + 1;
@@ -123,7 +123,7 @@ module uart_rx_coeff_loader #(
                         if (uart_rx_bit_spacing == 15) begin
                             uart_rx_bit_spacing <= 0;
                             if (uart_rx_bit == 1'b1) begin 
-                                prog_valid <= 1'b1; 
+                                data_valid_o <= 1'b1; 
                             end
                             uart_rx_state <= ST_RX_START;
                         end else begin

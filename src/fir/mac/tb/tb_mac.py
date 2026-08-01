@@ -29,21 +29,21 @@ class MACLogger:
 async def feed_mac(dut, x_vals, c_vals, clear_first=True):
     """Feeds sequence into MAC and flushes pipelined outputs (2-cycle latency)."""
     n = len(x_vals)
-    dut.valid.value = 1
+    dut.enable_i.value = 1
     
     for i in range(n + 2):
-        dut.clear.value = 1 if (i == 0 and clear_first) else 0
+        dut.clear_i.value = 1 if (i == 0 and clear_first) else 0
         
         if i < n:
-            dut.x.value = x_vals[i]
-            dut.c.value = c_vals[i]
+            dut.sample_i.value = x_vals[i]
+            dut.coeff_i.value = c_vals[i]
         else:
-            dut.x.value = 0
-            dut.c.value = 0
+            dut.sample_i.value = 0
+            dut.coeff_i.value = 0
             
         await RisingEdge(dut.clk)
         
-    dut.valid.value = 0
+    dut.enable_i.value = 0
     await RisingEdge(dut.clk)
 
 
@@ -52,15 +52,17 @@ async def mac_pipeline_test(dut):
     """Testbench for Q15 MAC Engine"""
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    dut.rst_n.value = 1
-    dut.valid.value = 0
-    dut.clear.value = 0
-    dut.x.value = 0
-    dut.c.value = 0
+    # Initialize ports mapping to the new module names
+    dut.arst_n.value = 1
+    dut.enable_i.value = 0
+    dut.clear_i.value = 0
+    dut.sample_i.value = 0
+    dut.coeff_i.value = 0
 
-    dut.rst_n.value = 0
+    # Reset sequence
+    dut.arst_n.value = 0
     await Timer(20, units="ns")
-    dut.rst_n.value = 1
+    dut.arst_n.value = 1
     await RisingEdge(dut.clk)
 
     # Define all test scenarios compactly
@@ -100,7 +102,7 @@ async def mac_pipeline_test(dut):
         logger = MACLogger(dut, scenario["name"])
         for test_name, x_vals, c_vals, expected in scenario["tests"]:
             await feed_mac(dut, x_vals, c_vals, clear_first=True)
-            y_val = dut.y.value.to_signed() # to_signed() prevents cocotb deprecation warnings
+            y_val = dut.result_o.value.to_signed() # to_signed() prevents cocotb deprecation warnings
             logger.log(test_name, y_val, expected)
         logger.report()
 
