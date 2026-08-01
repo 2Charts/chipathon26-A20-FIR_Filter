@@ -2,150 +2,139 @@
 
 module uart_rx_coeff_loader #(
     parameter CLKS_PER_BIT = 434
-)
-
-(
-    input wire  clk,
-    input wire  rst,
-    input wire  rx_serial,
-
-    output reg [15:0] coeff_data,
-    output reg [3:0] coeff_addr,
-    output reg [3:0] filter_mode,
-    output reg       coeff_valid
+)(
+    input  wire       clk,
+    input  wire       rst,
+    input  wire       rx_serial,
+    output reg [7:0]  prog_data,
+    output reg        prog_valid
 );
 
-    localparam s_IDLE           = 3'b000;
-    localparam s_RX_START_BIT   = 3'b001;
-    localparam s_RX_DATA_BITS   = 3'b010;
-    localparam s_RX_STOP_BIT    = 3'b011;
-    localparam s_CLEANUP        = 3'b100;
+    localparam C_RX_DIV = CLKS_PER_BIT / 16;
 
-    reg [2:0] r_SM_Main;
-    reg [15:0] r_Clock_Count;
-    reg [2:0] r_Bit_Index;
-    reg [7:0] r_Rx_Byte;
-    reg       r_Rx_Data_Valid;
+    reg [31:0] rx_baud_counter;
+    reg        rx_baud_tick;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            r_SM_Main       <= s_IDLE;
-            r_Clock_Count   <= 0;
-            r_Bit_Index     <= 0;
-            r_Rx_Byte       <= 8'h00;
-            r_Rx_Data_Valid <= 1'b0;
-        end 
-        
-        else begin
-            case (r_SM_Main)
-                s_IDLE: begin
-                    r_Rx_Data_Valid <= 1'b0;
-                    r_Clock_Count   <= 0;
-                    r_Bit_Index     <= 0;
-
-                    if (rx_serial == 1'b0)
-                        r_SM_Main     <= s_RX_START_BIT;
-                    else
-                        r_SM_Main <= s_IDLE;
-                end 
-
-                s_RX_START_BIT: begin
-                    if (r_Clock_Count == (CLKS_PER_BIT / 2)) begin
-                        if (rx_serial == 1'b0) begin
-                            r_Clock_Count <= 0;
-                            r_SM_Main     <= s_RX_DATA_BITS;
-                        end
-                        else begin
-                            r_SM_Main     <= s_IDLE;
-                        end
-                    end 
-                    else begin
-                        r_Clock_Count <= r_Clock_Count + 1;
-                        r_SM_Main <= s_RX_START_BIT;
-                    end
-                end
-
-                s_RX_DATA_BITS: begin
-                    if (r_Clock_Count < CLKS_PER_BIT - 1) begin
-                        r_Clock_Count <= r_Clock_Count + 1;
-                        r_SM_Main     <= s_RX_DATA_BITS;
-                    end
-                    else begin
-                        r_Clock_Count <= 0;
-                        r_Rx_Byte[r_Bit_Index] <= rx_serial;
-
-                        if (r_Bit_Index < 7) begin 
-                            r_Bit_Index <= r_Bit_Index + 1;
-                            r_SM_Main   <= s_RX_DATA_BITS;
-                        end
-                        else begin
-                            r_Bit_Index <= 0;
-                            r_SM_Main <= s_RX_STOP_BIT;
-                        end
-                    end
-                end
-
-                s_RX_STOP_BIT: begin
-                    if (r_Clock_Count < CLKS_PER_BIT - 1) begin
-                        r_Clock_Count <= r_Clock_Count + 1;
-                        r_SM_Main     <= s_RX_STOP_BIT;
-                    end
-                    else begin
-                        r_Rx_Data_Valid <= 1'b1;
-                        r_Clock_Count <= 0;
-                        r_SM_Main <= s_CLEANUP;
-                    end
-                end
-
-                s_CLEANUP: begin
-                    r_Rx_Data_Valid <= 1'b0;
-                    r_SM_Main       <= s_IDLE;
-                end
-
-                default: r_SM_Main <= s_IDLE;
-            endcase
+            rx_baud_counter <= 0;
+            rx_baud_tick    <= 1'b0;
+        end else begin
+            if (rx_baud_counter >= C_RX_DIV - 1) begin
+                rx_baud_counter <= 0;
+                rx_baud_tick    <= 1'b1;
+            end else begin
+                rx_baud_counter <= rx_baud_counter + 1;
+                rx_baud_tick    <= 1'b0;
+            end
         end
     end
 
-    reg [1:0] byte_count;
-    reg [15:0] temp_coeff_data;
+    reg [1:0] uart_rx_data_sr;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            byte_count      <= 2'd0;
-            temp_coeff_data <= 16'h0000;
-            coeff_data      <= 16'h0000;
-            coeff_addr      <= 4'h0;
-            filter_mode     <= 4'h0;
-            coeff_valid     <= 1'b0;
+            uart_rx_data_sr <= 2'b11;
+        end else begin
+            if (rx_baud_tick) begin
+                uart_rx_data_sr[0] <= rx_serial;
+                uart_rx_data_sr[1] <= uart_rx_data_sr[0];
+            end
         end
-        else begin
-            coeff_valid <= 1'b0;
+    end
 
-            if (r_Rx_Data_Valid) begin
-                case (byte_count)
-                    2'd0: begin
-                        temp_coeff_data[7:0] <= r_Rx_Byte;
-                        byte_count           <= byte_count + 1;
+    reg [1:0] uart_rx_filter;
+    reg       uart_rx_bit;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            uart_rx_filter <= 2'b11;
+            uart_rx_bit    <= 1'b1;
+        end else begin
+            if (rx_baud_tick) begin
+                if (uart_rx_data_sr[1] == 1'b1 && uart_rx_filter < 3) begin
+                    uart_rx_filter <= uart_rx_filter + 1;
+                end else if (uart_rx_data_sr[1] == 1'b0 && uart_rx_filter > 0) begin
+                    uart_rx_filter <= uart_rx_filter - 1;
+                end
+
+                if (uart_rx_filter == 2'd3) begin
+                    uart_rx_bit <= 1'b1;
+                end else if (uart_rx_filter == 2'd0) begin
+                    uart_rx_bit <= 1'b0;
+                end
+            end
+        end
+    end
+
+    localparam ST_RX_START = 2'b00;
+    localparam ST_RX_DATA  = 2'b01;
+    localparam ST_RX_STOP  = 2'b10;
+
+    reg [1:0] uart_rx_state;
+    reg [3:0] uart_rx_bit_spacing;
+    reg [2:0] uart_rx_count;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            uart_rx_state       <= ST_RX_START;
+            uart_rx_bit_spacing <= 0;
+            uart_rx_count       <= 0;
+            prog_data           <= 8'h00;
+            prog_valid          <= 1'b0;
+        end else begin
+            prog_valid <= 1'b0;
+
+            if (rx_baud_tick) begin
+                case (uart_rx_state)
+                    ST_RX_START: begin
+                        if (uart_rx_bit == 1'b0) begin
+                            // PENTING: Tunggu 7 tick (setengah bit) biar pas di tengah mata sinyal
+                            if (uart_rx_bit_spacing == 7) begin
+                                uart_rx_state       <= ST_RX_DATA;
+                                uart_rx_bit_spacing <= 0;
+                                uart_rx_count       <= 0;
+                            end else begin
+                                uart_rx_bit_spacing <= uart_rx_bit_spacing + 1;
+                            end
+                        end else begin
+                            uart_rx_bit_spacing <= 0;
+                        end
                     end
 
-                    2'd1: begin
-                        temp_coeff_data[15:8]   <= r_Rx_Byte;
-                        byte_count              <= byte_count + 1;
+                    ST_RX_DATA: begin
+                        // Tunggu 15 tick (1 bit penuh) untuk baca bit berikutnya
+                        if (uart_rx_bit_spacing == 15) begin
+                            uart_rx_bit_spacing <= 0;
+                            prog_data <= {uart_rx_bit, prog_data[7:1]};
+                            
+                            if (uart_rx_count < 7) begin
+                                uart_rx_count <= uart_rx_count + 1;
+                            end else begin
+                                uart_rx_count <= 0;
+                                uart_rx_state <= ST_RX_STOP;
+                            end
+                        end else begin
+                            uart_rx_bit_spacing <= uart_rx_bit_spacing + 1;
+                        end
                     end
 
-                    2'd2: begin
-                        coeff_data  <= temp_coeff_data;
-                        coeff_addr  <= r_Rx_Byte[7:4];
-                        filter_mode <= r_Rx_Byte[3:0];
-
-                        coeff_valid <= 1'b1;
-                        byte_count  <= 2'd0;
+                    ST_RX_STOP: begin
+                        if (uart_rx_bit_spacing == 15) begin
+                            uart_rx_bit_spacing <= 0;
+                            if (uart_rx_bit == 1'b1) begin 
+                                prog_valid <= 1'b1; 
+                            end
+                            uart_rx_state <= ST_RX_START;
+                        end else begin
+                            uart_rx_bit_spacing <= uart_rx_bit_spacing + 1;
+                        end
                     end
-
-                    default: byte_count <= 2'd0;
+                    
+                    default: uart_rx_state <= ST_RX_START;
                 endcase
             end
         end
     end
+
 endmodule
