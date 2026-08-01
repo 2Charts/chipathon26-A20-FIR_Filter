@@ -59,7 +59,7 @@ module fir_top (
 
         .waddr_i(coeff_addr_i),
         .wdata_i(coeff_data_i),
-        .wen_i(coeff_wr_en),
+        .wen_i(coeff_wr_en_i),
 
         .clk(clk)
     );
