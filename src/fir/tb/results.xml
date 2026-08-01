@@ -1,0 +1,8 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1785573003" />
+    <testcase name="test_fir_impulse" classname="tb_fir_top" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb/tb_fir_top.py" lineno="48" time="0.02240753173828125" sim_time_ns="400.0" ratio_time="17851.140619679947">
+      <failure error_type="ValueError" error_msg="Can't convert LogicArray to int: it contains non-0/1 values" />
+    </testcase>
+  </testsuite>
+</testsuites>

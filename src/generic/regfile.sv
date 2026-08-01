@@ -15,7 +15,7 @@ module regfile #(
     logic [XLEN-1:0] memory [0:REG_DEPTH-1];
 
     always_ff @( posedge clk ) begin
-        if(wen_i && waddr_i != 0) begin
+        if(wen_i) begin
             memory[waddr_i] <= wdata_i;
         end
     end

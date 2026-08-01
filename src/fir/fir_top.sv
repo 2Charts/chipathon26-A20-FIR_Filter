@@ -87,8 +87,21 @@ module fir_top (
         .result_o(m_axis_tdata_o)
     );
 
-    // add delay line, MAC
-
-    // integrate control FSM
+    fir_control control (
+        .clk(clk),
+        .arst_n(arst_n),
+        
+        .s_axis_tvalid_i(s_axis_tvalid_i),
+        .s_axis_tready_o(s_axis_tready_o),
+        
+        .m_axis_tvalid_o(m_axis_tvalid_o),
+        .m_axis_tready_i(m_axis_tready_i),
+        
+        .delay_line_shift_o(delay_line_shift),
+        .delay_line_sel_o(delay_line_sel),
+        .coeff_rd_addr_o(coeff_rd_addr),
+        .mac_enable_o(mac_enable),
+        .mac_clear_o(mac_clear)
+    );
 
 endmodule
