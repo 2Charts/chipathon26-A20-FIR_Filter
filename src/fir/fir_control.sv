@@ -67,7 +67,7 @@ module fir_control (
                 
                 // Keep index at 15 if cnt goes beyond 15, to avoid out-of-bounds or wrap around
                 coeff_rd_addr_o  = (cnt < 5'd16) ? cnt[3:0] : 4'd15;
-                delay_line_sel_o = (cnt < 5'd16) ? cnt[3:0] : 4'd15;
+                delay_line_sel_o = (cnt < 5'd16) ? (4'd15 - cnt[3:0]) : 4'd0;
                 
                 if (cnt == 5'd1) begin
                     mac_clear_o = 1'b1;
