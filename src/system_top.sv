@@ -9,137 +9,93 @@ module system_top (
     output logic miso,
     
     // uart for config
-    input logic uart_rx
+    input logic uart_rx,
+    
+    // data ready output for padring
+    output logic data_ready
 );
 
     // some basic params
     localparam SPI_DATA_WIDTH = 16;
     localparam FIFO_DEPTH = 8;
-    localparam CLKS_PER_BIT = 434; // standard 
+    localparam int CLK_FREQ = 50_000_000;
+    localparam int BAUD_RATE = 115200;
     
-    // uart to config regs
+    // config wires
+    logic [6:0]  config_data;
+    logic        config_wr_en;
     logic [15:0] coeff_data;
-    logic [3:0] coeff_addr;
-    logic [3:0] filter_mode;
-    logic coeff_valid;
+    logic [3:0]  coeff_addr;
+    logic        coeff_wr_en;
     
-    // config regs to datapath
-    logic [255:0] coeff_mem_flat;
-    logic mode_odd;
-    logic mode_asym;
-    
-    // axi stream between spi and fir controller
+    // axi stream between spi and fir
     logic [15:0] spi_to_fir_tdata;
-    logic spi_to_fir_tvalid;
-    logic spi_to_fir_tready;
+    logic        spi_to_fir_tvalid;
+    logic        spi_to_fir_tready;
     
     logic [15:0] fir_to_spi_tdata;
-    logic fir_to_spi_tvalid;
-    logic fir_to_spi_tready;
+    logic        fir_to_spi_tvalid;
+    logic        fir_to_spi_tready;
     
-    // delay line wires
-    logic shift_en;
-    logic [3:0] sel;
-    logic [15:0] data_in;
-    logic [17:0] pre_adder_out;
-    
-    // mac wires
-    logic mac_valid;
-    logic mac_clear;
-    logic signed [15:0] mac_x;
-    logic signed [15:0] mac_c;
-    logic signed [15:0] mac_y;
-    
-    // uart receiver
-    uart_rx_coeff_loader #(
-        .CLKS_PER_BIT(CLKS_PER_BIT)
-    ) uart_inst (
+    // uart programmer
+    programmer #(
+        .CLK_FREQ(CLK_FREQ),
+        .BAUD_RATE(BAUD_RATE)
+    ) prog_inst (
         .clk(clk),
-        .rst(~rst_n), // uart uses active high reset!
-        .rx_serial(uart_rx),
-        .coeff_data(coeff_data),
-        .coeff_addr(coeff_addr),
-        .filter_mode(filter_mode),
-        .coeff_valid(coeff_valid)
+        .arst_n(rst_n),
+        .rx_line_i(uart_rx),
+        .config_data_o(config_data),
+        .config_wr_en_o(config_wr_en),
+        .coeff_data_o(coeff_data),
+        .coeff_addr_o(coeff_addr),
+        .coeff_wr_en_o(coeff_wr_en)
     );
     
-    // holds the coefficients
-    fir_config_regs config_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .coeff_data(coeff_data),
-        .coeff_addr(coeff_addr),
-        .filter_mode(filter_mode),
-        .coeff_valid(coeff_valid),
-        .coeff_mem_flat(coeff_mem_flat),
-        .mode_odd(mode_odd),
-        .mode_asym(mode_asym)
-    );
-    
-    // state machine that runs the fir
-    fir_controller controller_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .s_axis_tdata(spi_to_fir_tdata),
-        .s_axis_tvalid(spi_to_fir_tvalid),
-        .s_axis_tready(spi_to_fir_tready),
-        .m_axis_tdata(fir_to_spi_tdata),
-        .m_axis_tvalid(fir_to_spi_tvalid),
-        .m_axis_tready(fir_to_spi_tready),
-        .shift_en(shift_en),
-        .sel(sel),
-        .data_in(data_in),
-        .pre_adder_out(pre_adder_out),
-        .mac_valid(mac_valid),
-        .mac_clear(mac_clear),
+    // FIR subsystem
+    fir_top fir_inst (
+        .s_axis_tdata_i(spi_to_fir_tdata),
+        .s_axis_tvalid_i(spi_to_fir_tvalid),
+        .s_axis_tready_o(spi_to_fir_tready),
         
-        .mac_x(mac_x),
-        .mac_c(mac_c),
-        .mac_y(mac_y),
-        .coeff_mem_flat(coeff_mem_flat)
+        .m_axis_tdata_o(fir_to_spi_tdata),
+        .m_axis_tvalid_o(fir_to_spi_tvalid),
+        .m_axis_tready_i(fir_to_spi_tready),
+        
+        .config_data_i(config_data),
+        .config_wr_en_i(config_wr_en),
+        .coeff_data_i(coeff_data),
+        .coeff_addr_i(coeff_addr),
+        .coeff_wr_en_i(coeff_wr_en),
+        
+        .arst_n(rst_n),
+        .clk(clk)
     );
     
-    // the folded delay line
-    delay_line delay_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .data_in(data_in),
-        .pre_adder_out(pre_adder_out),
-        .shift_en(shift_en),
-        .sel(sel),
-        .mode_odd(mode_odd),
-        .mode_asym(mode_asym)
-    );
+    // monitor signal for padring
+    assign data_ready = fir_to_spi_tvalid;
     
-    // mac engine
-    mac mac_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .valid(mac_valid),
-        .clear(mac_clear),
-        .x(mac_x),
-        .c(mac_c),
-        .y(mac_y),
-        .done()
-    );
-    
-    // our AXI wrapped spi slave
-    spi_axi_top #(
-        .DATA_WIDTH(SPI_DATA_WIDTH),
+    // AXI wrapped spi slave
+    spi_axis_top #(
         .FIFO_DEPTH(FIFO_DEPTH)
     ) spi_inst (
         .clk(clk),
-        .rst_n(rst_n),
-        .s_axis_tdata(fir_to_spi_tdata),
-        .s_axis_tvalid(fir_to_spi_tvalid),
-        .s_axis_tready(fir_to_spi_tready),
-        .m_axis_tdata(spi_to_fir_tdata),
-        .m_axis_tvalid(spi_to_fir_tvalid),
-        .m_axis_tready(spi_to_fir_tready),
-        .sck(sck),
-        .cs_n(cs_n),
-        .mosi(mosi),
-        .miso(miso)
+        .arst_n(rst_n),
+        
+        // Data coming INTO the SPI from the FIR
+        .s_axis_tdata_i(fir_to_spi_tdata),
+        .s_axis_tvalid_i(fir_to_spi_tvalid),
+        .s_axis_tready_o(fir_to_spi_tready),
+        
+        // Data going OUT of the SPI to the FIR
+        .m_axis_tdata_o(spi_to_fir_tdata),
+        .m_axis_tvalid_o(spi_to_fir_tvalid),
+        .m_axis_tready_i(spi_to_fir_tready),
+        
+        .sck_i(sck),
+        .cs_n_i(cs_n),
+        .mosi_i(mosi),
+        .miso_o(miso)
     );
 
 endmodule
