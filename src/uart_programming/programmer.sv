@@ -22,10 +22,8 @@ module programmer #(
 
     // TIMEOUT CALCULATION (Dynamic Width based on Parameters)
     localparam int TIMEOUT_CYCLES = (CLK_FREQ / 1000) * TIMEOUT_MS; 
-    
-    // Menghitung lebar bit counter yang dibutuhkan menggunakan logaritma basis 2
     localparam int COUNTER_WIDTH  = $clog2(TIMEOUT_CYCLES + 1);
-=
+
     // INTERNAL SIGNALS
     logic [7:0] uart_data_out;
     logic       uart_data_valid;
