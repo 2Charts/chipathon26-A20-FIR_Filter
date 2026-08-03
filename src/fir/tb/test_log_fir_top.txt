@@ -1,0 +1,45 @@
+rm -f results.xml
+"make" -f makefile results.xml
+make[1]: Entering directory '/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb'
+/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=tb_fir_top COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=fir_top TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp -fst  
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.14.4 interpreter at /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (stable)
+     0.00ns INFO     cocotb                             Seeding Python random module with 1785726873
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running tb_fir_top.test_fir_dual_model (1/1)
+                                                            Test FIR with Source, Dual Golden Models, and Checker
+     0.00ns WARNING  py.warnings                        /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb/tb_fir_top.py:64: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+     0.00ns WARNING  py.warnings                        /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb/tb_fir_top.py:14: DeprecationWarning: The 'units' argument has been renamed to 'unit'.
+                                                          await Timer(20, units="ns")
+    20.00ns INFO     cocotb.fir_top                     --- Testing Mode: Asym ---
+ 40230.00ns INFO     cocotb.fir_top                     HW Exact Checker: PASSED (0 Error)
+ 40230.00ns INFO     cocotb.fir_top                     Floating Point Checker: PASSED (Error <= 1 LSB)
+ 40230.00ns INFO     cocotb.fir_top                     --- Testing Mode: Sym Even ---
+ 80440.00ns INFO     cocotb.fir_top                     HW Exact Checker: PASSED (0 Error)
+ 80440.00ns INFO     cocotb.fir_top                     Floating Point Checker: PASSED (Error <= 1 LSB)
+ 80440.00ns INFO     cocotb.fir_top                     --- Testing Mode: Sym Odd ---
+120650.00ns INFO     cocotb.fir_top                     HW Exact Checker: PASSED (0 Error)
+120650.00ns INFO     cocotb.fir_top                     Floating Point Checker: PASSED (Error <= 1 LSB)
+120650.00ns INFO     cocotb.fir_top                     --- Testing Mode: Anti Even ---
+160860.00ns INFO     cocotb.fir_top                     HW Exact Checker: PASSED (0 Error)
+160860.00ns INFO     cocotb.fir_top                     Floating Point Checker: PASSED (Error <= 1 LSB)
+160860.00ns INFO     cocotb.fir_top                     --- Testing Mode: Anti Odd ---
+201070.00ns INFO     cocotb.fir_top                     HW Exact Checker: PASSED (0 Error)
+201070.00ns INFO     cocotb.fir_top                     Floating Point Checker: PASSED (Error <= 1 LSB)
+201070.00ns INFO     cocotb.fir_top                     ALL TESTS COMPLETED!
+201070.00ns INFO     cocotb.regression                  tb_fir_top.test_fir_dual_model passed
+201070.00ns INFO     cocotb.regression                  ****************************************************************************************
+                                                        ** TEST                            STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        ****************************************************************************************
+                                                        ** tb_fir_top.test_fir_dual_model   PASS      201070.00           3.86      52029.34  **
+                                                        ****************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0               201070.00           3.87      52008.49  **
+                                                        ****************************************************************************************
+FST info: dumpfile sim_build/fir_top.fst opened for output.
+make[1]: Leaving directory '/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb'

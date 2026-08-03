@@ -319,3 +319,313 @@ sel 15: Result =   78, Expected =   78
                                                         ***********************************************************************************************
                                                         ** TESTS=5 PASS=5 FAIL=0 SKIP=0                        1830.00           0.10      17561.19  **
                                                         ***********************************************************************************************
+
+
+============================================================
+Start Testing Scenario: Symmetric Even
+============================================================
+
+Shifting all 32 sample data into SIPO
+
+Input Signal (Taps 1 to 32):
+  Tap  1: 100
+  Tap  2: 61
+  Tap  3: 36
+  Tap  4: 22
+  Tap  5: 8
+  Tap  6: 71
+  Tap  7: 22
+  Tap  8: 17
+  Tap  9: 17
+  Tap 10: 75
+  Tap 11: 97
+  Tap 12: 19
+  Tap 13: 68
+  Tap 14: 21
+  Tap 15: 38
+  Tap 16: 73
+  Tap 17: 1
+  Tap 18: 94
+  Tap 19: 40
+  Tap 20: 30
+  Tap 21: 75
+  Tap 22: 74
+  Tap 23: 39
+  Tap 24: 45
+  Tap 25: 2
+  Tap 26: 61
+  Tap 27: 81
+  Tap 28: 56
+  Tap 29: 44
+  Tap 30: 100
+  Tap 31: 94
+  Tap 32: 46
+
+Testing Selector (Symmetric Even)
+------------------------------------------------------------
+sel  0: Result =   74, Expected =   74
+sel  1: Result =  132, Expected =  132
+sel  2: Result =   61, Expected =   61
+sel  3: Result =   98, Expected =   98
+sel  4: Result =   94, Expected =   94
+sel  5: Result =  171, Expected =  171
+sel  6: Result =  114, Expected =  114
+sel  7: Result =   62, Expected =   62
+sel  8: Result =   19, Expected =   19
+sel  9: Result =   83, Expected =   83
+sel 10: Result =  152, Expected =  152
+sel 11: Result =   64, Expected =   64
+sel 12: Result =   66, Expected =   66
+sel 13: Result =  136, Expected =  136
+sel 14: Result =  155, Expected =  155
+sel 15: Result =  146, Expected =  146
+
+>>> Symmetric Even PASSED THE TEST
+
+
+============================================================
+Start Testing Scenario: Symmetric Odd
+============================================================
+
+Shifting all 32 sample data into SIPO
+
+Input Signal (Taps 1 to 32):
+  Tap  1: 55
+  Tap  2: 68
+  Tap  3: 75
+  Tap  4: 19
+  Tap  5: 79
+  Tap  6: 55
+  Tap  7: 77
+  Tap  8: 89
+  Tap  9: 24
+  Tap 10: 20
+  Tap 11: 22
+  Tap 12: 58
+  Tap 13: 31
+  Tap 14: 36
+  Tap 15: 83
+  Tap 16: 8
+  Tap 17: 43
+  Tap 18: 45
+  Tap 19: 52
+  Tap 20: 10
+  Tap 21: 20
+  Tap 22: 72
+  Tap 23: 12
+  Tap 24: 36
+  Tap 25: 91
+  Tap 26: 4
+  Tap 27: 48
+  Tap 28: 59
+  Tap 29: 73
+  Tap 30: 35
+  Tap 31: 54
+  Tap 32: 19
+
+Testing Selector (Symmetric Odd)
+------------------------------------------------------------
+sel  0: Result =    8, Expected =    8
+sel  1: Result =  126, Expected =  126
+sel  2: Result =   81, Expected =   81
+sel  3: Result =   83, Expected =   83
+sel  4: Result =   68, Expected =   68
+sel  5: Result =   42, Expected =   42
+sel  6: Result =   92, Expected =   92
+sel  7: Result =   36, Expected =   36
+sel  8: Result =  125, Expected =  125
+sel  9: Result =  168, Expected =  168
+sel 10: Result =   59, Expected =   59
+sel 11: Result =  127, Expected =  127
+sel 12: Result =   78, Expected =   78
+sel 13: Result =  148, Expected =  148
+sel 14: Result =  103, Expected =  103
+sel 15: Result =  109, Expected =  109
+
+>>> Symmetric Odd PASSED THE TEST
+
+
+============================================================
+Start Testing Scenario: Anti-Symmetric Even
+============================================================
+
+Shifting all 32 sample data into SIPO
+
+Input Signal (Taps 1 to 32):
+  Tap  1: 7
+  Tap  2: 88
+  Tap  3: 28
+  Tap  4: 19
+  Tap  5: 86
+  Tap  6: 66
+  Tap  7: 73
+  Tap  8: 1
+  Tap  9: 58
+  Tap 10: 2
+  Tap 11: 1
+  Tap 12: 33
+  Tap 13: 45
+  Tap 14: 60
+  Tap 15: 36
+  Tap 16: 44
+  Tap 17: 64
+  Tap 18: 60
+  Tap 19: 53
+  Tap 20: 42
+  Tap 21: 17
+  Tap 22: 9
+  Tap 23: 37
+  Tap 24: 91
+  Tap 25: 82
+  Tap 26: 11
+  Tap 27: 31
+  Tap 28: 42
+  Tap 29: 48
+  Tap 30: 25
+  Tap 31: 58
+  Tap 32: 63
+
+Testing Selector (Anti-Symmetric Even)
+------------------------------------------------------------
+sel  0: Result =  -20, Expected =  -20
+sel  1: Result =  -24, Expected =  -24
+sel  2: Result =    7, Expected =    7
+sel  3: Result =    3, Expected =    3
+sel  4: Result =   16, Expected =   16
+sel  5: Result =   -8, Expected =   -8
+sel  6: Result =  -35, Expected =  -35
+sel  7: Result =  -33, Expected =  -33
+sel  8: Result =  -81, Expected =  -81
+sel  9: Result =   62, Expected =   62
+sel 10: Result =   35, Expected =   35
+sel 11: Result =   44, Expected =   44
+sel 12: Result =  -29, Expected =  -29
+sel 13: Result =    3, Expected =    3
+sel 14: Result =   30, Expected =   30
+sel 15: Result =  -56, Expected =  -56
+
+>>> Anti-Symmetric Even PASSED THE TEST
+
+
+============================================================
+Start Testing Scenario: Anti-Symmetric Odd
+============================================================
+
+Shifting all 32 sample data into SIPO
+
+Input Signal (Taps 1 to 32):
+  Tap  1: 72
+  Tap  2: 48
+  Tap  3: 34
+  Tap  4: 83
+  Tap  5: 12
+  Tap  6: 42
+  Tap  7: 62
+  Tap  8: 7
+  Tap  9: 53
+  Tap 10: 47
+  Tap 11: 75
+  Tap 12: 49
+  Tap 13: 89
+  Tap 14: 74
+  Tap 15: 61
+  Tap 16: 20
+  Tap 17: 25
+  Tap 18: 26
+  Tap 19: 20
+  Tap 20: 6
+  Tap 21: 100
+  Tap 22: 100
+  Tap 23: 15
+  Tap 24: 99
+  Tap 25: 97
+  Tap 26: 35
+  Tap 27: 49
+  Tap 28: 100
+  Tap 29: 2
+  Tap 30: 16
+  Tap 31: 60
+  Tap 32: 58
+
+Testing Selector (Anti-Symmetric Odd)
+------------------------------------------------------------
+sel  0: Result =   20, Expected =   20
+sel  1: Result =   36, Expected =   36
+sel  2: Result =   48, Expected =   48
+sel  3: Result =   69, Expected =   69
+sel  4: Result =   43, Expected =   43
+sel  5: Result =  -25, Expected =  -25
+sel  6: Result =  -53, Expected =  -53
+sel  7: Result =   38, Expected =   38
+sel  8: Result =  -92, Expected =  -92
+sel  9: Result =  -35, Expected =  -35
+sel 10: Result =    7, Expected =    7
+sel 11: Result =  -37, Expected =  -37
+sel 12: Result =  -17, Expected =  -17
+sel 13: Result =   32, Expected =   32
+sel 14: Result =   32, Expected =   32
+sel 15: Result =   12, Expected =   12
+
+>>> Anti-Symmetric Odd PASSED THE TEST
+
+
+============================================================
+Start Testing Scenario: Asymmetric
+============================================================
+
+Shifting all 32 sample data into SIPO
+
+Input Signal (Taps 1 to 32):
+  Tap  1: 81
+  Tap  2: 23
+  Tap  3: 17
+  Tap  4: 4
+  Tap  5: 40
+  Tap  6: 56
+  Tap  7: 87
+  Tap  8: 84
+  Tap  9: 72
+  Tap 10: 90
+  Tap 11: 74
+  Tap 12: 46
+  Tap 13: 97
+  Tap 14: 36
+  Tap 15: 49
+  Tap 16: 5
+  Tap 17: 66
+  Tap 18: 43
+  Tap 19: 13
+  Tap 20: 44
+  Tap 21: 4
+  Tap 22: 79
+  Tap 23: 75
+  Tap 24: 9
+  Tap 25: 69
+  Tap 26: 39
+  Tap 27: 91
+  Tap 28: 79
+  Tap 29: 32
+  Tap 30: 73
+  Tap 31: 68
+  Tap 32: 48
+
+Testing Selector (Asymmetric)
+------------------------------------------------------------
+sel  0: Result =    5, Expected =    5
+sel  1: Result =   49, Expected =   49
+sel  2: Result =   36, Expected =   36
+sel  3: Result =   97, Expected =   97
+sel  4: Result =   46, Expected =   46
+sel  5: Result =   74, Expected =   74
+sel  6: Result =   90, Expected =   90
+sel  7: Result =   72, Expected =   72
+sel  8: Result =   84, Expected =   84
+sel  9: Result =   87, Expected =   87
+sel 10: Result =   56, Expected =   56
+sel 11: Result =   40, Expected =   40
+sel 12: Result =    4, Expected =    4
+sel 13: Result =   17, Expected =   17
+sel 14: Result =   23, Expected =   23
+sel 15: Result =   81, Expected =   81
+
+>>> Asymmetric PASSED THE TEST

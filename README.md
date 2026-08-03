@@ -8,10 +8,10 @@
 |Jk.|[@Jekk1213](https://github.com/jekk1213)|Bandung Institute of Technology, Indonesia (Undergraduate)|Team Member|
 |Cliff|[@kiffot](https://github.com/kiffot)|Bandung Institute of Technology, Indonesia (Undergraduate)|Team Member|
 
-Overview: This project proposes a 16-bit programmable symmetric Finite Impulse Response (FIR) filter. The architecture will process 16-bit data with parallel multipliers. The number of filter taps will be parameterizable, targeting 15 taps for implementation.
+Overview: This project proposes a 16-bit programmable FIR filter with an integrated SPI and UART configuration interface. The architecture uses a folded Multiply-Accumulate (MAC) DSP design with a dynamically configurable delay line. It supports up to 32 taps for Symmetric and Anti-Symmetric modes, and 16 taps for Asymmetric modes. Coefficients are programmable via a 115200-baud UART interface, while high-speed sample data is streamed via SPI over AXI-Stream.
 
 Size: TBD
-Required Pins: TBD
+Required Pins: 8 (clk, rst_n, sck, cs_n, mosi, miso, uart_rx, data_ready)
 
 Links
 [Project Repository](https://github.com/2Charts/chipathon26-A20-FIR_Filter)

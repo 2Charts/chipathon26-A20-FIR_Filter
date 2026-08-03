@@ -8,7 +8,7 @@ COCOTB_TEST_MODULES=tb_system_top COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TO
      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.14.4 interpreter at /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/bin/python3
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (stable)
-     0.00ns INFO     cocotb                             Seeding Python random module with 1785685540
+     0.00ns INFO     cocotb                             Seeding Python random module with 1785726887
      0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /home/kiffot/chipathon/chipathon26-A20-FIR_Filter/venv/lib/python3.14/site-packages/cocotb
      0.00ns INFO     cocotb                             Running tests
      0.00ns INFO     cocotb.regression                  running tb_system_top.test_system_top (1/1)
@@ -45,9 +45,9 @@ COCOTB_TEST_MODULES=tb_system_top COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TO
 4343400.00ns INFO     cocotb.regression                  ***************************************************************************************
                                                          ** TEST                           STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                          ***************************************************************************************
-                                                         ** tb_system_top.test_system_top   PASS     4343400.00          13.53     321099.01  **
+                                                         ** tb_system_top.test_system_top   PASS     4343400.00          12.98     334663.76  **
                                                          ***************************************************************************************
-                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0             4343400.00          13.53     321074.53  **
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0             4343400.00          12.98     334633.76  **
                                                          ***************************************************************************************
 FST info: dumpfile sim_build/system_top.fst opened for output.
 make[1]: Leaving directory '/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src'

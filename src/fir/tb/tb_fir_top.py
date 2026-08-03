@@ -1,6 +1,13 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer, ReadOnly
+import sys
+import os
+import random
+
+# Add golden_model.py to path
+sys.path.append(os.path.abspath("../../"))
+import golden_model
 
 async def reset_dut(dut):
     dut.arst_n.value = 0
@@ -11,7 +18,8 @@ async def reset_dut(dut):
 async def load_coefficients(dut, coeffs):
     for i, c in enumerate(coeffs):
         dut.coeff_addr_i.value = i
-        dut.coeff_data_i.value = c
+        # Convert to 16-bit logic properly
+        dut.coeff_data_i.value = c & 0xFFFF
         dut.coeff_wr_en_i.value = 1
         await RisingEdge(dut.clk)
     dut.coeff_wr_en_i.value = 0
@@ -26,7 +34,7 @@ async def configure_mode(dut, mode):
 
 async def send_axis_data(dut, data):
     for d in data:
-        dut.s_axis_tdata_i.value = d
+        dut.s_axis_tdata_i.value = d & 0xFFFF
         dut.s_axis_tvalid_i.value = 1
         while True:
             await RisingEdge(dut.clk)
@@ -45,58 +53,89 @@ async def receive_axis_data(dut, num_samples):
                 val = dut.m_axis_tdata_o.value.to_signed()
                 results.append(val)
             except ValueError:
-                dut._log.error(f"X or Z in m_axis_tdata_o: {dut.m_axis_tdata_o.value.binstr}")
+                dut._log.error(f"X or Z in m_axis_tdata_o")
                 results.append(0)
+    await RisingEdge(dut.clk)
     return results
 
 @cocotb.test()
-async def test_fir_impulse(dut):
-    """Test FIR with an impulse response"""
+async def test_fir_dual_model(dut):
+    """Test FIR with Source, Dual Golden Models, and Checker"""
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     # Initialize
     dut.s_axis_tvalid_i.value = 0
     dut.s_axis_tdata_i.value = 0
     dut.m_axis_tready_i.value = 1
-    
     dut.config_wr_en_i.value = 0
     dut.coeff_wr_en_i.value = 0
     
-    # Tie unused signals to 0 if any
-    
     await reset_dut(dut)
     
-    # We will test an impulse response with decaying coefficients
-    # Using Q15 formatting where 32768 is ~1.0
-    # Let's use 16384 (0.5), 8192 (0.25), 4096 (0.125)...
-    coeffs = [16384, 8192, 4096, 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1, 0]
-    await load_coefficients(dut, coeffs)
-    await configure_mode(dut, 0) # 0 = asymmetric
-
-    # Send an impulse
-    input_data = [1000] + [0]*19
+    # Modes to test: Asym (0), Sym Even (4), Sym Odd (5), Anti Even (6), Anti Odd (7)
+    modes = [0, 4, 5, 6, 7]
+    mode_names = {0: "Asym", 4: "Sym Even", 5: "Sym Odd", 6: "Anti Even", 7: "Anti Odd"}
     
-    recv_task = cocotb.start_soon(receive_axis_data(dut, len(input_data)))
-    await send_axis_data(dut, input_data)
+    NUM_SAMPLES = 200
     
-    results = await recv_task
-    
-    dut._log.info("Expected outputs are the input impulse scaled by the coefficients.")
-    dut._log.info(f"Results: {results}")
-    
-    # Verification
-    expected = []
-    for c in coeffs:
-        # MAC formula: (val * c + 0x4000) >> 15
-        expected_val = (1000 * c + 0x4000) >> 15
-        expected.append(expected_val)
-    
-    # The last 4 samples of input_data are just flushing out zeros
-    expected += [0, 0, 0, 0]
-    
-    dut._log.info(f"Expected: {expected}")
-    
-    for i in range(len(expected)):
-        assert results[i] == expected[i], f"Mismatch at index {i}: expected {expected[i]}, got {results[i]}"
-
-    dut._log.info("FIR Impulse Test PASSED!")
+    for mode in modes:
+        dut._log.info(f"--- Testing Mode: {mode_names[mode]} ---")
+        
+        # 1. SOURCE: Generate Random Coefficients and Data
+        # Using smaller random numbers to avoid massive overflow before >>15, though it handles it.
+        # Random coeffs between -16384 and 16383 (Q15 range)
+        coeffs = [random.randint(-16384, 16383) for _ in range(16)]
+        
+        # Random samples between -32768 and 32767
+        samples = [random.randint(-32768, 32767) for _ in range(NUM_SAMPLES)]
+        
+        # 2. REFERENCE MODELS
+        hw_expected = golden_model.get_hardware_accurate_output(samples, coeffs, mode)
+        fl_expected = golden_model.get_floating_point_output(samples, coeffs, mode)
+        
+        # 3. RTL EXECUTION
+        await reset_dut(dut)
+        await load_coefficients(dut, coeffs)
+        await configure_mode(dut, mode)
+        
+        # Stream data in and out
+        recv_task = cocotb.start_soon(receive_axis_data(dut, len(samples)))
+        await send_axis_data(dut, samples)
+        rtl_results = await recv_task
+        
+        # 4. CHECKER
+        hw_mismatches = 0
+        fl_mismatches = 0
+        
+        for i in range(NUM_SAMPLES):
+            # Hardware accurate checker (Tolerance = 0)
+            if rtl_results[i] != hw_expected[i]:
+                hw_mismatches += 1
+                if hw_mismatches <= 5: # Limit logging
+                    dut._log.error(f"HW Mismatch at {i}: RTL={rtl_results[i]}, HW_MODEL={hw_expected[i]}")
+                    
+            # Floating point checker (Tolerance = +/- 1 LSB)
+            fl_err = abs(rtl_results[i] - fl_expected[i])
+            if fl_err > 1:
+                fl_mismatches += 1
+                if fl_mismatches <= 5: # Limit logging
+                    dut._log.error(f"FL Mismatch at {i}: RTL={rtl_results[i]}, FL_MODEL={fl_expected[i]}, ERR={fl_err}")
+                    
+        if hw_mismatches == 0:
+            dut._log.info("HW Exact Checker: PASSED (0 Error)")
+        else:
+            dut._log.error(f"HW Exact Checker: FAILED with {hw_mismatches} mismatches")
+            
+        if fl_mismatches == 0:
+            dut._log.info("Floating Point Checker: PASSED (Error <= 1 LSB)")
+        else:
+            dut._log.error(f"Floating Point Checker: FAILED with {fl_mismatches} mismatches")
+            
+        # We expect hardware to exactly match HW model
+        assert hw_mismatches == 0, f"Hardware exact model failed for {mode_names[mode]}"
+        
+        # We also assert floating point matches to prove it mathematically acts like a filter.
+        # Note: If RTL has a bug, this assertion will catch it!
+        assert fl_mismatches == 0, f"Floating point math failed for {mode_names[mode]}! This indicates an RTL bug!"
+        
+    dut._log.info("ALL TESTS COMPLETED!")

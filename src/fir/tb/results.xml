@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1785585237" />
-    <testcase name="test_fir_impulse" classname="tb_fir_top" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb/tb_fir_top.py" lineno="52" time="0.10767173767089844" sim_time_ns="4200.0" ratio_time="39007.45070946484" />
+    <property name="random_seed" value="1785726873" />
+    <testcase name="test_fir_dual_model" classname="tb_fir_top" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/tb/tb_fir_top.py" lineno="61" time="3.8645505905151367" sim_time_ns="201070.0" ratio_time="52029.335699082614" />
   </testsuite>
 </testsuites>
