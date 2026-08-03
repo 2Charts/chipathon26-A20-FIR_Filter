@@ -10,7 +10,8 @@ TOPLEVEL = programmer
 COCOTB_TEST_MODULES   = tb_programmer
 
 COMPILE_ARGS += -Pprogrammer.CLK_FREQ=50000000 #example just for test
-COMPILE_ARGS += -Pprogrammer.BAUD_RATE=115200 #example just for test
+COMPILE_ARGS += -Pprogrammer.BAUD_RATE=115200  #example just for test
+COMPILE_ARGS += -Pprogrammer.TIMEOUT_MS=5 #example just for test      
 
 WAVES = 1
 

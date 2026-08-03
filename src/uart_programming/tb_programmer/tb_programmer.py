@@ -61,7 +61,6 @@ async def test_programmer_flow(dut):
     # =====================================================================
     # SCENARIO 1: Random Configuration
     # =====================================================================
-    # Membangkitkan data config random (nilai 0-15 agar masuk ke 4-bit config)
     rand_config_val = random.randint(0, 0x0F)
     rand_config_byte = 0x80 | rand_config_val  # Bit ke-7 diset 1 sebagai header config
     
@@ -81,7 +80,6 @@ async def test_programmer_flow(dut):
     # =====================================================================
     # SCENARIO 2: Random Coefficients
     # =====================================================================
-    # Membangkitkan alamat random (0x00 sampai 0x1F) dan data 16-bit random
     rand_addr = random.randint(0, 0x0F)
     rand_data_16 = random.randint(0, 0xFFFF)
     rand_low_byte = rand_data_16 & 0xFF
@@ -120,12 +118,12 @@ async def test_programmer_flow(dut):
     dut._log.info("  [PROCESS] FSM hangs, timeout counter triggers a reset back to ST_IDLE, followed by new random transaction.")
     
     await uart_send_byte(dut, 0x09) 
-    await ClockCycles(dut.clk, 25000)
+    await Timer(6, unit="ms")
     
     async def send_new():
         await uart_send_byte(dut, rand_recovery_addr) 
-        await uart_send_byte(dut, rec_low) 
-        await uart_send_byte(dut, rec_high) 
+        await uart_send_byte(dut, rand_recovery_data & 0xFF) 
+        await uart_send_byte(dut, (rand_recovery_data >> 8) & 0xFF) 
         
     cocotb.start_soon(send_new())
     addr, data = await monitor_coeff(dut)
