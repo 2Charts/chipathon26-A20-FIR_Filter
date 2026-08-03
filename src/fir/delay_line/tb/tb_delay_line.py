@@ -6,14 +6,12 @@ import random
 class DelayLineGoldenModel:
     """Python Delay Line Golden Model for 32-tap FIR architecture"""
     def __init__(self):
-        self.sipo_top = [0]*16  #Taps 31-16
-        self.sipo_mid = 0         #Center tap
-        self.sipo_bot = [0]*15  #Taps 15-1
+        self.sipo_top = [0]*16  #Taps 1-16
+        self.sipo_bot = [0]*16  #Taps 17-32
 
     def shift(self, data_in, mode_odd):
-        bot_in = self.sipo_mid if mode_odd else self.sipo_top[-1]
+        bot_in = self.sipo_top[-1]
         self.sipo_bot = [bot_in] + self.sipo_bot[:-1]
-        self.sipo_mid = self.sipo_top[-1]
         self.sipo_top = [data_in] + self.sipo_top[:-1]
 
     def get_expected_out(self, data_in, sel, mode_config):
@@ -23,15 +21,15 @@ class DelayLineGoldenModel:
 
         mux_top = self.sipo_top[15 - sel]
         
-        if sel == 15:
-            mux_bot = data_in
-        else:
-            mux_bot = self.sipo_bot[14 - sel]
-        
         if is_asym:
             mux_bot = 0
-        elif is_odd and sel == 15:
-            mux_bot = 0
+        elif is_odd:
+            if sel == 0:
+                mux_bot = 0
+            else:
+                mux_bot = self.sipo_bot[sel - 1]
+        else:
+            mux_bot = self.sipo_bot[sel]
             
         def to_signed16(val):
             return val - 0x10000 if (val & 0x8000) else val
@@ -96,7 +94,7 @@ async def run_directed_test(dut, mode_config, test_name):
         # Print isi delay line
         f.write("\nInput Signal (Taps 1 to 32):\n")
 
-        all_taps = model.sipo_top + [model.sipo_mid] + model.sipo_bot
+        all_taps = model.sipo_top + model.sipo_bot
 
         for idx, tap_val in enumerate(all_taps, start=1):
             f.write(f"  Tap {idx:2d}: {tap_val}\n")
