@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1785595603" />
-    <testcase name="test_programmer_flow" classname="tb_programmer" file="/workspace/src/uart_programming/tb_programmer/tb_programmer.py" lineno="46" time="6.945265054702759" sim_time_ns="1193530.0" ratio_time="171848.01308509317" />
-  </testsuite>
-</testsuites>

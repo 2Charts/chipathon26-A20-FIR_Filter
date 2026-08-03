@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1785570302" />
-    <testcase name="test_uart_rx" classname="uartrx_tb" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/uart_programming/tb_uart_rx/uartrx_tb.py" lineno="20" time="1.270432949066162" sim_time_ns="266600.0" ratio_time="209849.72107025847" />
-  </testsuite>
-</testsuites>

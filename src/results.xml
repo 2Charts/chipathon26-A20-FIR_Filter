@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1785726887" />
-    <testcase name="test_system_top" classname="tb_system_top" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/tb_system_top.py" lineno="64" time="12.978399515151978" sim_time_ns="4343400.0" ratio_time="334663.76150072913" />
-  </testsuite>
-</testsuites>

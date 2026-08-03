@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1785569783" />
-    <testcase name="mac_pipeline_test" classname="tb_mac" file="/home/kiffot/chipathon/chipathon26-A20-FIR_Filter/src/fir/mac/tb/tb_mac.py" lineno="50" time="0.016496896743774414" sim_time_ns="430.0" ratio_time="26065.508360672324" />
-  </testsuite>
-</testsuites>
