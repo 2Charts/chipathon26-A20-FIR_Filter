@@ -20,73 +20,62 @@ module delay_line (
     input  logic [2:0]  mode_i 
 );
 
-    //SIPO processing 16x16, 16x1, 16x15
-    logic [15:0] sipo_top [1:16]; //Taps 31-16
-    logic [15:0] sipo_mid;       //Center tap
-    logic [15:0] sipo_bot [1:15]; //Taps 15-1
+    //SIPO processing 16x16
+    logic [15:0] sipo_top [1:16]; //Taps 1 to 16
+    logic [15:0] sipo_bot [1:16]; //Taps 17 to 32
 
     //Explicit control signals decoding based on 3-bit mode_i
     logic mode_asym_active;
     logic mode_antisym_active;
     logic mode_odd_active;
 
-    assign mode_asym_active=(mode_i[2] == 1'b0);
-    assign mode_antisym_active=(mode_i[2] == 1'b1) && (mode_i[1] == 1'b1);
-    assign mode_odd_active=(mode_i[2] == 1'b1) && (mode_i[0] == 1'b1);
+    assign mode_asym_active = (mode_i[2] == 1'b0);
+    assign mode_antisym_active = (mode_i[2] == 1'b1) && (mode_i[1] == 1'b1);
+    assign mode_odd_active = (mode_i[2] == 1'b1) && (mode_i[0] == 1'b1);
 
     // SIPO shifting (Shift Register)
     always_ff @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
-            for (int i=1; i<=16; i++) sipo_top[i]<=16'd0;
-            sipo_mid <= 16'd0;
-            for (int i=1; i<=15; i++) sipo_bot[i]<=16'd0;
+            for (int i=1; i<=16; i++) sipo_top[i] <= 16'd0;
+            for (int i=1; i<=16; i++) sipo_bot[i] <= 16'd0;
         end
         else if (shift_en_i) begin
-            //Shift top (16x16)
-            sipo_top[1]<=sample_i;
-            for (int i=2; i<=16; i++) sipo_top[i]<=sipo_top[i-1];
+            //Shift top
+            sipo_top[1] <= sample_i;
+            for (int i=2; i<=16; i++) sipo_top[i] <= sipo_top[i-1];
             
-            //Shift mid (16x1)
-            sipo_mid<=sipo_top[16];
-
-            //Shift bottom (16x15)
-            if (mode_odd_active == 1'b1) begin
-                sipo_bot[1]<=sipo_mid; //If odd, take from mid
-            end else begin
-                sipo_bot[1]<=sipo_top[16]; //If even, straight from top
-            end
-            
-            //Shifting for bottom
-            for (int i=2; i<=15; i++) sipo_bot[i]<=sipo_bot[i-1];
+            //Shift bottom
+            sipo_bot[1] <= sipo_top[16];
+            for (int i=2; i<=16; i++) sipo_bot[i] <= sipo_bot[i-1];
         end
     end
 
-    //16:1 Multiplexer logic part
+    //Multiplexer logic part
     logic [15:0] mux_top;
     logic [15:0] mux_bot;
-    logic [15:0] mux_bot_routed;
 
     always_comb begin
-        //Top MUX (Taps 31-16)
-        mux_top = sipo_top[16-sel_i]; 
+        //Top MUX (Taps 1 to 16)
+        mux_top = sipo_top[16 - sel_i]; 
 
-        //Bottom MUX (Taps 15-1 and sample_i)
-        if (sel_i == 4'd15) begin
-            mux_bot = sample_i;
-        end else begin
-            mux_bot = sipo_bot[15-sel_i];
-        end
-        
-        //Zeroing logic based on active modes
+        //Bottom MUX logic based on mode
         if (mode_asym_active == 1'b1) begin
-            //0xx: Asymmetric -> Drop ALL bottom data (A + 0)
-            mux_bot_routed = 16'd0;
-        end else if (mode_odd_active == 1'b1 && sel_i == 4'd15) begin
-            //Odd mode -> Drop ONLY the center tap at sel_i=15
-            mux_bot_routed=16'd0;
+            // Asymmetric mode: no bottom taps
+            mux_bot = 16'd0;
+        end else if (mode_odd_active == 1'b1) begin
+            // Odd mode (31 taps): center tap is c[15] (sel_i == 0)
+            if (sel_i == 4'd0) begin
+                mux_bot = 16'd0;
+            end else begin
+                // Pair c[14] (sel_i=1) with sipo_bot[1] (x[t-16])
+                // Pair c[0] (sel_i=15) with sipo_bot[15] (x[t-30])
+                mux_bot = sipo_bot[sel_i];
+            end
         end else begin
-            //Normal symmetric / antisymmetric routing
-            mux_bot_routed=mux_bot;
+            // Even mode (32 taps):
+            // Pair c[15] (sel_i=0) with sipo_bot[1] (x[t-16])
+            // Pair c[0] (sel_i=15) with sipo_bot[16] (x[t-31])
+            mux_bot = sipo_bot[sel_i + 1];
         end
     end
 
@@ -95,18 +84,18 @@ module delay_line (
     logic signed [16:0] bot_ext;
 
     always_comb begin
-        //Sign extend 16-bit to 18-bit signed
-        top_ext=$signed(mux_top);
+        //Sign extend 16-bit to 17-bit signed
+        top_ext = $signed(mux_top);
         
         if (mode_antisym_active == 1'b1) begin
             //Subtraction (A - B) using direct signed arithmetic
-            bot_ext=-$signed(mux_bot_routed);
+            bot_ext = -$signed(mux_bot);
         end else begin
             //Addition (A + B)
-            bot_ext=$signed(mux_bot_routed);
+            bot_ext = $signed(mux_bot);
         end
     end
 
-    assign sample_o=top_ext + bot_ext;
+    assign sample_o = top_ext + bot_ext;
 
 endmodule
