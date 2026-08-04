@@ -30,14 +30,25 @@ module uart_rx #(
         end
     end
 
-    reg [1:0] uart_rx_data_sr;
+    // Fast clock domain synchronizer for the asynchronous rx_line_i
+    reg [1:0] rx_sync_sr;
+    always @(posedge clk or negedge arst_n) begin
+        if (!arst_n) begin
+            rx_sync_sr <= 2'b11;
+        end else begin
+            rx_sync_sr[0] <= rx_line_i;
+            rx_sync_sr[1] <= rx_sync_sr[0];
+        end
+    end
 
+    // Slow baud-tick domain shift register for edge detection
+    reg [1:0] uart_rx_data_sr;
     always @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
             uart_rx_data_sr <= 2'b11;
         end else begin
             if (rx_baud_tick) begin
-                uart_rx_data_sr[0] <= rx_line_i;
+                uart_rx_data_sr[0] <= rx_sync_sr[1];
                 uart_rx_data_sr[1] <= uart_rx_data_sr[0];
             end
         end
