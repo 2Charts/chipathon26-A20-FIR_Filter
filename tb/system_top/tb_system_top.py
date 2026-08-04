@@ -18,7 +18,7 @@ async def send_uart_byte(dut, byte_data, baud_rate=115200):
         
     # Stop bit
     dut.uart_rx.value = 1
-    await Timer(bit_time_ns, units="ns")
+    await Timer(bit_time_ns * 2, units="ns")
 
 async def send_spi_word(dut, mosi_data, clk_period_ns=200):
     # SPI mode 0 (CPOL=0, CPHA=0)

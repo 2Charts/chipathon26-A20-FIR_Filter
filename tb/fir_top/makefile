@@ -8,11 +8,11 @@ TOPLEVEL_LANG ?= verilog
 COMPILE_ARGS += -g2012
 
 # Lokasi file RTL
-VERILOG_SOURCES += ../fir_top.sv
-VERILOG_SOURCES += ../fir_control.sv
-VERILOG_SOURCES += ../delay_line/delay_line.sv
-VERILOG_SOURCES += ../mac/mac.sv
-VERILOG_SOURCES += ../../generic/regfile.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/fir_top.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/fir_control.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/delay_line/delay_line.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/mac/mac.sv
+VERILOG_SOURCES += $(PWD)/../../src/generic/regfile.sv
 
 # Nama modul toplevel di SystemVerilog
 TOPLEVEL = fir_top

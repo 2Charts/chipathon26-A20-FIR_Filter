@@ -24,7 +24,7 @@ async def uart_send_byte(dut, data_byte, baud_rate=BAUD_RATE):
         await Timer(bit_time_ns, unit="ns")
         
     dut.rx_line_i.value = 1
-    await Timer(bit_time_ns, unit="ns")
+    await Timer(bit_time_ns * 2, unit="ns")
 
 async def monitor_config(dut):
     for _ in range(25000):

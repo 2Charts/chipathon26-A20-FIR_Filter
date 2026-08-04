@@ -1,7 +1,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += ../uart_rx.sv
+VERILOG_SOURCES += $(PWD)/../../src/uart_programming/uart_rx.sv
 
 TOPLEVEL = uart_rx
 

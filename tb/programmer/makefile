@@ -2,9 +2,9 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 PWD = $(shell pwd)
 
-VERILOG_SOURCES += $(PWD)/../programmer.sv
-VERILOG_SOURCES += $(PWD)/../uart_rx.sv
-VERILOG_SOURCES += $(PWD)/../../generic/fwft_fifo.sv
+VERILOG_SOURCES += $(PWD)/../../src/uart_programming/programmer.sv
+VERILOG_SOURCES += $(PWD)/../../src/uart_programming/uart_rx.sv
+VERILOG_SOURCES += $(PWD)/../../src/generic/fwft_fifo.sv
 
 TOPLEVEL = programmer
 COCOTB_TEST_MODULES   = tb_programmer

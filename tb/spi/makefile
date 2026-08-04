@@ -4,7 +4,7 @@ TOPLEVEL_LANG ?= verilog
 
 COMPILE_ARGS += -g2012
 
-VERILOG_SOURCES += ../../generic/fwft_fifo.sv ../spi_slave.sv ../spi_axis_top.sv
+VERILOG_SOURCES += $(PWD)/../../src/generic/fwft_fifo.sv $(PWD)/../../src/spi-axi/spi_slave.sv $(PWD)/../../src/spi-axi/spi_axis_top.sv
 
 TOPLEVEL = spi_axis_top
 

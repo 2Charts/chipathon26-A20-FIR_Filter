@@ -6,7 +6,7 @@ import os
 import random
 
 # Add golden_model.py to path
-sys.path.append(os.path.abspath("../../"))
+sys.path.append(os.path.abspath("../"))
 import golden_model
 
 async def reset_dut(dut):

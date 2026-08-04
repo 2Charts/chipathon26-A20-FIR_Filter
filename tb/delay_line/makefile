@@ -1,7 +1,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += ../delay_line.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/delay_line/delay_line.sv
 
 TOPLEVEL = delay_line
 
