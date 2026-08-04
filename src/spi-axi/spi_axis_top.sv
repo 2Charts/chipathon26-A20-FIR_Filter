@@ -16,6 +16,7 @@ module spi_axis_top #(
     input   logic           cs_n_i,
     input   logic           mosi_i,
     output  logic           miso_o,
+    output  logic           miso_oe_o,
 
     input   logic           arst_n,
     input   logic           clk
@@ -70,6 +71,7 @@ module spi_axis_top #(
         .cs_n_i(cs_n_i),
         .mosi_i(mosi_i),
         .miso_o(miso_o),
+        .miso_oe_o(miso_oe_o),
 
     // FWFT FIFO interface
         .tx_data_i(tx_data),

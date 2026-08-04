@@ -49,6 +49,7 @@ module chip_core #(
     wire miso;
     wire sck;
     wire cs_n;
+    wire miso_oe;
 
     // Map inputs to bidir_in
     // Pin 5: uart_rx (bidir 0)
@@ -71,7 +72,7 @@ module chip_core #(
     // Output enable: 1 for outputs, 0 for inputs
     assign bidir_oe[0] = 1'b0;
     assign bidir_oe[1] = 1'b0;
-    assign bidir_oe[2] = 1'b1;
+    assign bidir_oe[2] = miso_oe;
     assign bidir_oe[3] = 1'b0;
     assign bidir_oe[4] = 1'b0;
 
@@ -98,6 +99,7 @@ module chip_core #(
         .cs_n(cs_n),
         .mosi(mosi),
         .miso(miso),
+        .miso_oe(miso_oe),
         .uart_rx(uart_rx)
     );
 

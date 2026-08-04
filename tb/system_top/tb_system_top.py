@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath("../"))
 import golden_model
 
 # Simulation parameters
-CLK_FREQ = 50_000_000
+CLK_FREQ = 16_000_000
 BAUD_RATE = 115200
 BAUD_PERIOD_NS = int(1e9 / BAUD_RATE)
 SPI_PERIOD_NS = 1000 # 1 MHz SPI Clock

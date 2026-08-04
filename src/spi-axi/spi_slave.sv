@@ -4,6 +4,7 @@ module spi_slave (
     input   logic           cs_n_i,
     input   logic           mosi_i,
     output  logic           miso_o,
+    output  logic           miso_oe_o,
 
     // FWFT FIFO interface
     input   logic [15:0]    tx_data_i,
@@ -59,7 +60,8 @@ module spi_slave (
     logic mosi;
     logic miso;
     assign mosi   = sync_mosi[1];
-    assign miso_o = spi_active ? miso : 1'bz;
+    assign miso_o = spi_active ? miso : 1'b0;
+    assign miso_oe_o = spi_active;
 
     logic [15:0] sreg;
     logic [4:0]  bit_cnt;

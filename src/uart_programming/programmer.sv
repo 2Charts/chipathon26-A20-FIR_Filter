@@ -21,6 +21,7 @@ module programmer #(
 );
 
     // TIMEOUT CALCULATION (Dynamic Width based on Parameters)
+    localparam int CLKS_PER_BIT = (CLK_FREQ + (BAUD_RATE / 2)) / BAUD_RATE;
     localparam int TIMEOUT_CYCLES = (CLK_FREQ / 1000) * TIMEOUT_MS; 
     localparam int COUNTER_WIDTH  = $clog2(TIMEOUT_CYCLES + 1);
 
