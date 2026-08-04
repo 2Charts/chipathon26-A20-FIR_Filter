@@ -49,7 +49,6 @@ module chip_core #(
     wire miso;
     wire sck;
     wire cs_n;
-    wire data_ready;
 
     // Map inputs to bidir_in
     // Pin 5: uart_rx (bidir 0)
@@ -63,13 +62,11 @@ module chip_core #(
 
     // Map outputs to bidir_out
     // Pin 7: miso (bidir 2)
-    // Pin 10: data_ready (bidir 5)
     assign bidir_out[0] = 1'b0;
     assign bidir_out[1] = 1'b0;
     assign bidir_out[2] = miso;
     assign bidir_out[3] = 1'b0;
     assign bidir_out[4] = 1'b0;
-    assign bidir_out[5] = data_ready;
 
     // Output enable: 1 for outputs, 0 for inputs
     assign bidir_oe[0] = 1'b0;
@@ -77,12 +74,11 @@ module chip_core #(
     assign bidir_oe[2] = 1'b1;
     assign bidir_oe[3] = 1'b0;
     assign bidir_oe[4] = 1'b0;
-    assign bidir_oe[5] = 1'b1;
 
     // Tie off the remaining bidir pads
     genvar i;
     generate
-        for (i = 6; i < NUM_BIDIR_PADS; i++) begin : gen_tie_off
+        for (i = 5; i < NUM_BIDIR_PADS; i++) begin : gen_tie_off
             assign bidir_out[i] = 1'b0;
             assign bidir_oe[i]  = 1'b0;
         end
@@ -102,8 +98,7 @@ module chip_core #(
         .cs_n(cs_n),
         .mosi(mosi),
         .miso(miso),
-        .uart_rx(uart_rx),
-        .data_ready(data_ready)
+        .uart_rx(uart_rx)
     );
 
 endmodule
