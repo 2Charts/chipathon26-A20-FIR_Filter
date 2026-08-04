@@ -40,7 +40,8 @@ module system_top (
     // uart programmer
     programmer #(
         .CLK_FREQ(CLK_FREQ),
-        .BAUD_RATE(BAUD_RATE)
+        .BAUD_RATE(BAUD_RATE),
+        .TIMEOUT_MS(5)
     ) prog_inst (
         .clk(clk),
         .arst_n(rst_n),
