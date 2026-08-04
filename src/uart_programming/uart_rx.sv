@@ -1,5 +1,5 @@
 module uart_rx #(
-    parameter CLK_FREQ  = 50_000_000,  // Default clock frequency (e.g., 50 MHz)
+    parameter CLK_FREQ  = 16_000_000,  // Default clock frequency (e.g., 16 MHz)
     parameter BAUD_RATE = 115200       // Default baud rate
 )(
     input  wire       clk,
@@ -10,7 +10,7 @@ module uart_rx #(
 );
 
     // Calculate the division factor for 16x oversampling
-    localparam C_RX_DIV = CLK_FREQ / (BAUD_RATE * 16);
+    localparam C_RX_DIV = (CLK_FREQ + (BAUD_RATE * 8)) / (BAUD_RATE * 16);
 
     reg [31:0] rx_baud_counter;
     reg        rx_baud_tick;

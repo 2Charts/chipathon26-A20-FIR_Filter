@@ -1,6 +1,6 @@
 module system_top # (
     // some basic params
-    parameter int CLK_FREQ = 50_000_000,
+    parameter int CLK_FREQ = 16_000_000,
     parameter int BAUD_RATE = 115200
 )(
     input logic clk,
@@ -11,6 +11,7 @@ module system_top # (
     input logic cs_n,
     input logic mosi,
     output logic miso,
+    output logic miso_oe,
     
     // uart for config
     input logic uart_rx
@@ -104,7 +105,8 @@ module system_top # (
         .sck_i(sck),
         .cs_n_i(cs_n),
         .mosi_i(mosi),
-        .miso_o(miso)
+        .miso_o(miso),
+        .miso_oe_o(miso_oe)
     );
 
 endmodule
