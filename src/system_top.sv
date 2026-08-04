@@ -9,10 +9,7 @@ module system_top (
     output logic miso,
     
     // uart for config
-    input logic uart_rx,
-    
-    // data ready output for padring
-    output logic data_ready
+    input logic uart_rx
 );
 
     // some basic params
@@ -20,6 +17,20 @@ module system_top (
     localparam FIFO_DEPTH = 8;
     localparam int CLK_FREQ = 50_000_000;
     localparam int BAUD_RATE = 115200;
+    
+    // Reset Synchronizer
+    logic rst_n_meta;
+    logic rst_n_sync;
+    
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rst_n_meta <= 1'b0;
+            rst_n_sync <= 1'b0;
+        end else begin
+            rst_n_meta <= 1'b1;
+            rst_n_sync <= rst_n_meta;
+        end
+    end
     
     // config wires
     logic [6:0]  config_data;
@@ -44,7 +55,7 @@ module system_top (
         .TIMEOUT_MS(5)
     ) prog_inst (
         .clk(clk),
-        .arst_n(rst_n),
+        .arst_n(rst_n_sync),
         .rx_line_i(uart_rx),
         .config_data_o(config_data),
         .config_wr_en_o(config_wr_en),
@@ -69,19 +80,16 @@ module system_top (
         .coeff_addr_i(coeff_addr),
         .coeff_wr_en_i(coeff_wr_en),
         
-        .arst_n(rst_n),
+        .arst_n(rst_n_sync),
         .clk(clk)
     );
-    
-    // monitor signal for padring
-    assign data_ready = fir_to_spi_tvalid;
     
     // AXI wrapped spi slave
     spi_axis_top #(
         .FIFO_DEPTH(FIFO_DEPTH)
     ) spi_inst (
         .clk(clk),
-        .arst_n(rst_n),
+        .arst_n(rst_n_sync),
         
         // Data coming INTO the SPI from the FIR
         .s_axis_tdata_i(fir_to_spi_tdata),
