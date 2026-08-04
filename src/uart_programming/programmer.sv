@@ -1,7 +1,8 @@
 module programmer #(
-    //module parameters
+    //module parameters (No default values, must be configured dynamically from outside)
     parameter int CLK_FREQ,
-    parameter int BAUD_RATE
+    parameter int BAUD_RATE,
+    parameter int TIMEOUT_MS
 )(
     input  logic        clk,
     input  logic        arst_n,
@@ -19,11 +20,11 @@ module programmer #(
     output logic        coeff_wr_en_o
 );
 
-    //timeout calculation
-    localparam int BIT_CYCLES = CLK_FREQ / BAUD_RATE; 
-    localparam int TIMEOUT_CYCLES = BIT_CYCLES * 50; //50 is tentative, it can be change depend on performance
+    // TIMEOUT CALCULATION (Dynamic Width based on Parameters)
+    localparam int TIMEOUT_CYCLES = (CLK_FREQ / 1000) * TIMEOUT_MS; 
+    localparam int COUNTER_WIDTH  = $clog2(TIMEOUT_CYCLES + 1);
 
-    //internal Signal Part
+    // INTERNAL SIGNALS
     logic [7:0] uart_data_out;
     logic       uart_data_valid;
 
@@ -32,10 +33,10 @@ module programmer #(
     logic       fifo_full;
     logic       fifo_rd_en;
 
-    //timer register timeout
-    logic [31:0] timeout_cnt;
+    // Timer register timeout dengan lebar bit dinamis
+    logic [COUNTER_WIDTH-1:0] timeout_cnt;
 
-    //module reference
+    // SUB-MODULE INSTANTIATIONS
     uart_rx #(
         .CLK_FREQ(CLK_FREQ),
         .BAUD_RATE(BAUD_RATE)
@@ -63,7 +64,7 @@ module programmer #(
         .full_o     (fifo_full)
     );
 
-    //FSM Part
+    //FSM PART
     typedef enum logic [1:0] {
         ST_IDLE      = 2'b00,
         ST_COEF_LOW  = 2'b01,
@@ -75,26 +76,25 @@ module programmer #(
     logic [3:0] saved_addr;
     logic [7:0] saved_low_byte;
 
-    //sequential Logic contain state transition, data storage, & timeout counter
+    //Sequential Logic (State transition, data storage, & timeout counter)
     always_ff @(posedge clk or negedge arst_n) begin
         if (!arst_n) begin
             state          <= ST_IDLE;
             saved_addr     <= 4'd0;
             saved_low_byte <= 8'd0;
-            timeout_cnt    <= 32'd0; //counter reset
-        end else begin
+            timeout_cnt    <= '0;
             state <= next_state;
 
-            //timeout Logic
+            //Timeout Logic
             if (state == ST_IDLE || (!fifo_empty && fifo_rd_en)) begin
-                //reset stopwatch if idle or just receive data
-                timeout_cnt <= 32'd0;
+                //Reset stopwatch if idle or just received data
+                timeout_cnt <= '0;
             end else if (state != ST_IDLE) begin
-                //stopwatch if stuck
-                timeout_cnt <= timeout_cnt + 1;
+                //Stopwatch runs if stuck in non-idle state
+                timeout_cnt <= timeout_cnt + 1'b1;
             end
 
-            //store data logic
+            //Store data logic
             if (!fifo_empty && fifo_rd_en) begin
                 if (state == ST_IDLE && fifo_rd_data[7] == 1'b0) begin
                     saved_addr <= fifo_rd_data[3:0];
@@ -105,39 +105,39 @@ module programmer #(
         end
     end
 
-    //combinational Logic contain next state and output evaluation
+    //Combinational Logic (Next state and output evaluation)
     always_comb begin
-        next_state=state;
-        fifo_rd_en=1'b0;
+        next_state     = state;
+        fifo_rd_en     = 1'b0;
         
-        config_data_o=7'd0;
-        config_wr_en_o=1'b0;
+        config_data_o  = 7'd0;
+        config_wr_en_o = 1'b0;
         
-        coeff_data_o=16'd0;
-        coeff_addr_o=saved_addr;
-        coeff_wr_en_o=1'b0;
+        coeff_data_o   = 16'd0;
+        coeff_addr_o   = saved_addr;
+        coeff_wr_en_o  = 1'b0;
 
         case (state)
             ST_IDLE: begin
                 if (!fifo_empty) begin
-                    fifo_rd_en=1'b1;
+                    fifo_rd_en = 1'b1;
                     
-                    if (fifo_rd_data[7]==1'b1) begin
-                        config_data_o=fifo_rd_data[6:0];
-                        config_wr_en_o=1'b1;
-                        next_state=ST_IDLE;
+                    if (fifo_rd_data[7] == 1'b1) begin
+                        config_data_o  = fifo_rd_data[6:0];
+                        config_wr_en_o = 1'b1;
+                        next_state     = ST_IDLE;
                     end else begin
-                        next_state=ST_COEF_LOW;
+                        next_state = ST_COEF_LOW;
                     end
                 end
             end
 
             ST_COEF_LOW: begin
                 if (!fifo_empty) begin
-                    fifo_rd_en  = 1'b1;
-                    next_state  = ST_COEF_HIGH;
+                    fifo_rd_en = 1'b1;
+                    next_state = ST_COEF_HIGH;
                 end else if (timeout_cnt >= TIMEOUT_CYCLES) begin
-                    //reset to idle if it takes too long
+                    //Reset to idle if it takes too long
                     next_state = ST_IDLE;
                 end
             end
@@ -149,7 +149,7 @@ module programmer #(
                     coeff_wr_en_o = 1'b1;
                     next_state    = ST_IDLE;
                 end else if (timeout_cnt >= TIMEOUT_CYCLES) begin
-                    //reset to idle if it takes too long
+                    //Reset to idle if it takes too long
                     next_state = ST_IDLE;
                 end
             end
