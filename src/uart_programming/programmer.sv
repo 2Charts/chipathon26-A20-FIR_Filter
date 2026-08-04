@@ -83,6 +83,7 @@ module programmer #(
             saved_addr     <= 4'd0;
             saved_low_byte <= 8'd0;
             timeout_cnt    <= '0;
+        end else begin
             state <= next_state;
 
             //Timeout Logic
@@ -114,8 +115,9 @@ module programmer #(
         config_wr_en_o = 1'b0;
         
         coeff_data_o   = 16'd0;
-        coeff_addr_o   = saved_addr;
         coeff_wr_en_o  = 1'b0;
+        
+        coeff_addr_o   = saved_addr; // Ensure output is driven
 
         case (state)
             ST_IDLE: begin

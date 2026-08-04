@@ -8,7 +8,7 @@ TOPLEVEL_LANG ?= verilog
 COMPILE_ARGS += -g2012
 
 # Lokasi file RTL
-VERILOG_SOURCES += ../mac.sv
+VERILOG_SOURCES += $(PWD)/../../src/fir/mac/mac.sv
 
 # Nama modul toplevel di SystemVerilog
 TOPLEVEL = mac
