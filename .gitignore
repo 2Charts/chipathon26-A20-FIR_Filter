@@ -8,3 +8,4 @@ img/
 *.lyrdb
 .ipynb_checkpoints/
 results.xml
+.venv

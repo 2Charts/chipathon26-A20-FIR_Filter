@@ -1,133 +1,187 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, ReadOnly, FallingEdge
+from cocotb.triggers import RisingEdge, Timer, ReadOnly
+import sys
+import os
+import random
 
-async def send_uart_byte(dut, byte_data, baud_rate=115200):
-    # 50 MHz clock is 20 ns period. 
-    # 115200 baud -> 1 / 115200 = 8.68 us per bit = 8680 ns per bit
-    bit_time_ns = int(1e9 / baud_rate)
-    
+sys.path.append(os.path.abspath("../"))
+import golden_model
+
+# Simulation parameters
+CLK_FREQ = 50_000_000
+BAUD_RATE = 115200
+BAUD_PERIOD_NS = int(1e9 / BAUD_RATE)
+SPI_PERIOD_NS = 1000 # 1 MHz SPI Clock
+
+async def reset_dut(dut):
+    """Assert reset and initialize interfaces to idle states."""
+    dut.rst_n.value = 0
+    dut.uart_rx.value = 1
+    dut.sck.value = 0
+    dut.cs_n.value = 1
+    dut.mosi.value = 0
+    await Timer(100, unit="ns")
+    dut.rst_n.value = 1
+    await RisingEdge(dut.clk)
+
+async def uart_send_byte(dut, byte_val):
+    """Bit-bang a single UART byte (8N1) at the configured baud rate."""
     # Start bit
     dut.uart_rx.value = 0
-    await Timer(bit_time_ns, units="ns")
+    await Timer(BAUD_PERIOD_NS, unit="ns")
     
-    # Data bits
+    # Data bits (LSB first)
     for i in range(8):
-        dut.uart_rx.value = (byte_data >> i) & 1
-        await Timer(bit_time_ns, units="ns")
+        dut.uart_rx.value = (byte_val >> i) & 1
+        await Timer(BAUD_PERIOD_NS, unit="ns")
         
     # Stop bit
     dut.uart_rx.value = 1
-    await Timer(bit_time_ns * 2, units="ns")
+    await Timer(BAUD_PERIOD_NS, unit="ns")
+    # Small gap between bytes
+    await Timer(BAUD_PERIOD_NS // 2, unit="ns")
 
-async def send_spi_word(dut, mosi_data, clk_period_ns=200):
-    # SPI mode 0 (CPOL=0, CPHA=0)
-    # Master sends on falling edge, samples on rising edge
-    # Slave (dut) samples on rising edge, sends on falling edge
-    miso_data = 0
+async def load_coefficients_uart(dut, coeffs):
+    """Send 16 coefficients via UART."""
+    for i, c in enumerate(coeffs):
+        # Header: MSB [0 X X X A A A A] LSB
+        header = i & 0x0F
+        await uart_send_byte(dut, header)
+        
+        # 16-bit Q15 Coefficient (Little Endian)
+        c_uint16 = c & 0xFFFF
+        await uart_send_byte(dut, c_uint16 & 0xFF)         # LSB
+        await uart_send_byte(dut, (c_uint16 >> 8) & 0xFF)  # MSB
+
+async def configure_mode_uart(dut, mode):
+    """Configure filter mode via UART."""
+    # Header: MSB [1 C C C R R R R] LSB
+    header = 0x80 | ((mode & 0x07) << 4)
+    await uart_send_byte(dut, header)
+    # Wait for system_top to process UART packet
+    await Timer(5, unit="us")
+
+async def spi_transact(dut, data_in):
+    """Perform a 16-bit SPI Mode 0 transaction, return the received data."""
+    # SPI Mode 0: CPOL=0 (Idle low), CPHA=0 (Sample on leading/rising edge, shift on trailing/falling)
     dut.cs_n.value = 0
     dut.sck.value = 0
-    await Timer(clk_period_ns, units="ns")
+    data_out = 0
     
-    for i in range(16):
-        bit_idx = 15 - i
-        dut.mosi.value = (mosi_data >> bit_idx) & 1
-        await Timer(clk_period_ns / 2, units="ns")
+    # Setup delay after CS asserted
+    await Timer(SPI_PERIOD_NS // 4, unit="ns")
+    
+    for i in range(15, -1, -1):
+        # Master drives MOSI (MSB first)
+        dut.mosi.value = (data_in >> i) & 1
+        await Timer(SPI_PERIOD_NS // 4, unit="ns")
         
-        # Rising edge (slave samples mosi, master samples miso)
+        # Rising edge
         dut.sck.value = 1
         await ReadOnly()
+        bit_in = int(dut.miso.value) if dut.miso.value.is_resolvable else 0
+        data_out = (data_out << 1) | bit_in
         
-        # Convert LogicArray to int gracefully
-        try:
-            miso_bit = int(dut.miso.value)
-        except ValueError:
-            miso_bit = 0
-            
-        miso_data = (miso_data << 1) | miso_bit
+        await Timer(SPI_PERIOD_NS // 2, unit="ns")
         
-        await Timer(clk_period_ns / 2, units="ns")
-        
-        # Falling edge (slave shifts out miso)
+        # Falling edge
         dut.sck.value = 0
+        await Timer(SPI_PERIOD_NS // 4, unit="ns")
         
-    await Timer(clk_period_ns, units="ns")
     dut.cs_n.value = 1
-    await Timer(clk_period_ns * 2, units="ns")
+    await Timer(SPI_PERIOD_NS, unit="ns")
     
-    # Sign extend from 16-bit to signed integer if necessary
-    if miso_data & 0x8000:
-        miso_data -= 0x10000
+    # Sign-extend 16-bit to signed integer
+    if data_out & 0x8000:
+        data_out -= 0x10000
         
-    return miso_data
+    return data_out
 
 @cocotb.test()
 async def test_system_top(dut):
-    """Testbench for full system top integration"""
-    # Start clock
-    cocotb.start_soon(Clock(dut.clk, 20, units="ns").start())
+    """System Top Level Test via UART and SPI."""
+    cocotb.start_soon(Clock(dut.clk, int(1e9 / CLK_FREQ), unit="ns").start())
 
-    # Initialize inputs
-    dut.rst_n.value = 0
-    dut.uart_rx.value = 1
-    dut.cs_n.value = 1
-    dut.sck.value = 0
-    dut.mosi.value = 0
-
-    await Timer(200, units="ns")
-    dut.rst_n.value = 1
-    await RisingEdge(dut.clk)
+    modes = [0, 4, 5, 6, 7]
+    mode_names = {0: "Asym", 4: "Sym Even", 5: "Sym Odd", 6: "Anti Even", 7: "Anti Odd"}
+    NUM_SAMPLES = 50
     
-    dut._log.info("Reset complete. Starting UART Programming...")
+    log_file_path = "system_top_log.txt"
+    with open(log_file_path, "w") as f:
+        f.write("=== Verification Log ===\n\n")
 
-    # 1. Configure the FIR filter using UART
-    # We want Asymmetric mode (config = 0). 
-    # Programmer protocol: MSB=1 for config byte.
-    await send_uart_byte(dut, 0x80) # 1000_0000 -> bit 7 is 1, config is 0
-    dut._log.info("Sent Config Byte.")
-
-    # 2. Write 16 coefficients using UART
-    # Protocol: MSB=0 for coefficients. 
-    # Byte 1: Addr, Byte 2: Data Low, Byte 3: Data High
-    # Let's set a simple impulse: coeff 0 = 32767 (0x7FFF), others = 0
-    coeffs = [0x7FFF] + [0] * 15
-    
-    for i in range(16):
-        c = coeffs[i]
-        addr = i
-        data_low = c & 0xFF
-        data_high = (c >> 8) & 0xFF
+    for mode in modes:
+        dut._log.info(f"--- Testing Mode: {mode_names[mode]} ---")
         
-        await send_uart_byte(dut, addr)
-        await send_uart_byte(dut, data_low)
-        await send_uart_byte(dut, data_high)
+        # 1. GENERATE VECTORS
+        coeffs = [random.randint(-16384, 16383) for _ in range(16)]
+        samples = [random.randint(-32768, 32767) for _ in range(NUM_SAMPLES)]
         
-    dut._log.info("Sent 16 coefficients.")
+        # 2. EXPECTED MODELS
+        hw_expected = golden_model.get_hardware_accurate_output(samples, coeffs, mode)
+        fl_expected = golden_model.get_floating_point_output(samples, coeffs, mode)
         
-    await Timer(10, units="us") # Wait for everything to settle
-
-    # 3. Send data via SPI and read results
-    # We will send [1000, 0, 0, 0, 0]
-    # Because of AXI stream and FIFO delays, the first few SPI transactions 
-    # might just return 0 (or previous dummy data) while the FIR is computing.
-    inputs = [1000, 0, 0, 0, 0]
-    
-    dut._log.info("Starting SPI Data Streaming...")
-    
-    # We will just stream 20 values in a row to see the impulse response come out
-    spi_results = []
-    
-    for i in range(20):
-        if i < len(inputs):
-            val = inputs[i]
-        else:
-            val = 0
+        # 3. CONFIGURE HARDWARE
+        await reset_dut(dut)
+        dut._log.info("Loading coefficients over UART...")
+        await load_coefficients_uart(dut, coeffs)
+        dut._log.info("Configuring mode over UART...")
+        await configure_mode_uart(dut, mode)
+        
+        # 4. STREAM DATA VIA SPI
+        dut._log.info("Streaming data over SPI...")
+        rtl_results = []
+        
+        # Output is returned in the next transaction. 
+        # N+1 Transactions for N samples
+        for i in range(NUM_SAMPLES + 1):
+            s_val = samples[i] & 0xFFFF if i < NUM_SAMPLES else 0x0000
+            m_val = await spi_transact(dut, s_val)
             
-        miso = await send_spi_word(dut, val)
-        spi_results.append(miso)
+            # First transaction returns garbage
+            if i > 0:
+                rtl_results.append(m_val)
+                
+        # 5. LOGGING AND ASSERTIONS
+        hw_mismatches = 0
         
-    dut._log.info(f"SPI MISO Raw Results: {spi_results}")
-    
-    # Usually, we'd expect the impulse to come out after a few pipeline stages
-    # Let's just verify the system doesn't crash and we got some data back!
-    dut._log.info("Test finished.")
+        with open(log_file_path, "a") as f:
+            f.write(f"--- FILTER MODE: {mode_names[mode]} (Code: {mode}) ---\n")
+            f.write("Coefficients:\n")
+            for i, c in enumerate(coeffs):
+                c_float = c / 32768.0
+                f.write(f"  Tap {i:2}: Q15 = {c:6d}, Float = {c_float:+.6f}\n")
+            f.write("\n")
+            
+            header_str = (f"| {'Idx':^4} | {'Input':^7} | {'RTL Out':^8} | "
+                          f"{'HW Exp':^8} | {'Math Exp':^9} | "
+                          f"{'HW Err':^6} | {'Math Err':^8} | {'Status':^6} |")
+            f.write("-" * len(header_str) + "\n")
+            f.write(header_str + "\n")
+            f.write("-" * len(header_str) + "\n")
+            
+            for i in range(NUM_SAMPLES):
+                inp = samples[i]
+                rtl = rtl_results[i]
+                hw  = hw_expected[i]
+                fl  = fl_expected[i]
+                
+                hw_err = abs(rtl - hw)
+                fl_err = abs(rtl - fl)
+                
+                status = "PASS" if hw_err == 0 else "FAIL"
+                if hw_err != 0:
+                    hw_mismatches += 1
+                
+                row_str = (f"| {i:4d} | {inp:7d} | {rtl:8d} | "
+                           f"{hw:8d} | {fl:9d} | "
+                           f"{hw_err:6d} | {fl_err:8d} | {status:6} |")
+                f.write(row_str + "\n")
+            
+            f.write("-" * len(header_str) + "\n\n")
+
+        assert hw_mismatches == 0, f"Hardware mismatch detected in mode: {mode_names[mode]}!"
+        dut._log.info(f"Mode {mode_names[mode]} Passed. Log appended to {log_file_path}.")
+
+    dut._log.info(f"All modes verified successfully! Full log available at: {log_file_path}")

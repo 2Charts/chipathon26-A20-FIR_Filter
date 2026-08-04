@@ -105,17 +105,5 @@ def get_floating_point_output(samples, coeffs, mode):
     # Saturation
     y_int = np.clip(y_int, -32768, 32767).tolist()
     
-    # We only care about the outputs corresponding to the input samples fed in sequence
+    # Only return the outputs corresponding to the input samples fed in sequence
     return y_int[:len(samples)]
-
-if __name__ == "__main__":
-    coeffs = [(i+1)*100 for i in range(16)]
-    samples = [1000, -2000, 3000, -4000, 5000]
-    
-    for mode_name, mode_val in [("Asym", 0), ("Sym Even", 4), ("Sym Odd", 5), ("Anti Even", 6), ("Anti Odd", 7)]:
-        hw_out = get_hardware_accurate_output(samples, coeffs, mode_val)
-        fl_out = get_floating_point_output(samples, coeffs, mode_val)
-        
-        print(f"{mode_name}:")
-        print(f"  HW: {hw_out}")
-        print(f"  FL: {fl_out}")

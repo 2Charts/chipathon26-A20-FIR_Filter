@@ -1,4 +1,8 @@
-module system_top (
+module system_top # (
+    // some basic params
+    parameter int CLK_FREQ = 50_000_000,
+    parameter int BAUD_RATE = 115200
+)(
     input logic clk,
     input logic rst_n,
     
@@ -12,11 +16,7 @@ module system_top (
     input logic uart_rx
 );
 
-    // some basic params
-    localparam SPI_DATA_WIDTH = 16;
     localparam FIFO_DEPTH = 8;
-    localparam int CLK_FREQ = 50_000_000;
-    localparam int BAUD_RATE = 115200;
     
     // Reset Synchronizer
     logic rst_n_meta;
