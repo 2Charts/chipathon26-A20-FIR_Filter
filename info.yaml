@@ -14,6 +14,6 @@
 project:
   title: "16-bit Programmable Symmetric FIR Filter"
   team: "A20 MisterKebab"
-  discord: "kiffot"
+  discord: "2Charts"
   description: "A 16-bit programmable FIR filter with an integrated SPI and UART configuration interface."
   lvs_config: "lvs_config.json"
