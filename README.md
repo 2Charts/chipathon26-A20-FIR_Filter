@@ -10,10 +10,9 @@
 
 Overview: This project proposes a 16-bit programmable FIR filter with an integrated SPI and UART configuration interface. The architecture uses a folded Multiply-Accumulate (MAC) DSP design with a dynamically configurable delay line. It supports up to 32 taps for Symmetric and Anti-Symmetric modes, and 16 taps for Asymmetric modes. Coefficients are programmable via a 115200-baud UART interface, while high-speed sample data is streamed via SPI over AXI-Stream.
 
-Size: TBD
-Required Pins: 7 (clk, rst_n, sck, cs_n, mosi, miso, uart_rx)
+Size: 1100µm x 550µm (GF180MCU)
+Required Pins: 8 (clk, rst_n, sck, cs_n, mosi, miso, miso_oe, uart_rx)
 
 Links
 [Project Repository](https://github.com/2Charts/chipathon26-A20-FIR_Filter)
 Project Proposal :  TBD
-

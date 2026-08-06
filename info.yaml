@@ -1,0 +1,19 @@
+# ----- ------ ----- ----- ------ ----- ----- ------ -----
+# Chipathon 2026: Project configuration
+# LICENSE: Apache License Version 2.0
+# http://www.apache.org/licenses/
+# ----- ------ ----- ----- ------ ----- ----- ------ -----
+
+# data will be pulled from main branch of the repo.
+# please be sure that the main branch contains the data you want to submit.
+# This file will be updated with more information later
+
+# ======================================================
+# Project metadata (used for documentation / review)
+# ======================================================
+project:
+  title: "16-bit Programmable Symmetric FIR Filter"
+  team: "A20 MisterKebab"
+  discord: "2Charts"
+  description: "A 16-bit programmable FIR filter with an integrated SPI and UART configuration interface."
+  lvs_config: "lvs_config.json"
