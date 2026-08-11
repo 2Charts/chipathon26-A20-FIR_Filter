@@ -10,7 +10,8 @@
 
 Overview: This project proposes a 16-bit programmable FIR filter with an integrated SPI and UART configuration interface. The architecture uses a folded Multiply-Accumulate (MAC) DSP design with a dynamically configurable delay line. It supports up to 32 taps for Symmetric and Anti-Symmetric modes, and 16 taps for Asymmetric modes. Coefficients are programmable via a 115200-baud UART interface, while high-speed sample data is streamed via SPI over AXI-Stream.
 
-Size: 1100µm x 550µm (GF180MCU)
+Size: 800µm x 600µm (GF180MCU)
+Target Frequency: 16 MHz
 Required Pins: 8 (clk, rst_n, sck, cs_n, mosi, miso, miso_oe, uart_rx)
 
 Links

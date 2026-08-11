@@ -22,11 +22,11 @@ USE_SLANG: True
 SLANG_ARGUMENTS: ['--keep-hierarchy']
 
 CLOCK_PORT: clk
-CLOCK_PERIOD: 50
+CLOCK_PERIOD: 40
 
 # Die area: 1100x550 um absolute
 FP_SIZING: absolute
-DIE_AREA: [0.0, 0.0, 1100.0, 550.0]
+DIE_AREA: [0.0, 0.0, 800.0, 600.0]
 
 # Power / ground nets.
 VDD_NETS:
