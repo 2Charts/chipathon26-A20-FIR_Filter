@@ -12,12 +12,17 @@ module tb_system_top;
     
     logic uart_rx;
     logic spi_start;
+    logic miso_oe;
+    
+    // Power pins for Gate-Level Simulation
+    supply1 VDD;
+    supply0 VSS;
     
     // instantiate the top level wrapper
     system_top dut (.*);
     
     // just loop it back so we get something out
-    assign miso = mosi;
+    assign mosi = miso;
     
     initial begin
         clk = 0;
@@ -44,9 +49,17 @@ module tb_system_top;
         $dumpfile("waveform_sys.vcd");
         $dumpvars(0, tb_system_top);
         
+`ifdef GL_SIM
+        $sdf_annotate("final/sdf/nom_tt_025C_5v00/system_top__nom_tt_025C_5v00.sdf", dut);
+`endif
+        
         rst_n = 0;
         uart_rx = 1;
         spi_start = 0;
+        
+        // Initialize SPI inputs to prevent X propagation
+        sck = 0;
+        cs_n = 1;
         
         #100 rst_n = 1;
         @(posedge clk);
@@ -82,15 +95,18 @@ module tb_system_top;
         
         $display("System Top compiled and initialized fine!");
         
-        // Let's dump all coeff_mem values
+`ifndef GL_SIM
+        // Let's dump all coeff_mem values (RTL ONLY)
         for (int i=0; i<16; i++) begin
             $display("coeff_mem[%0d] = %h", i, dut.config_inst.coeff_mem[i]);
         end
+`endif
         
         $finish;
     end
     
     always @(negedge clk) begin
+`ifndef GL_SIM
         if ($time > 2224000000 && $time < 2225000000) begin
             if (dut.controller_inst.state == 1) begin // CALC state
                 $display("T=%0t: calc_cnt=%d, sel=%d, mac_x=%h, mac_c=%h, product=%h, acc=%h, y=%h", 
@@ -104,6 +120,7 @@ module tb_system_top;
                          dut.mac_inst.y);
             end
         end
+`endif
     end
 
 endmodule
