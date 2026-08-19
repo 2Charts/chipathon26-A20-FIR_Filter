@@ -9,6 +9,13 @@
 # This file will be updated with more information later
 
 # ======================================================
+# Reusable Templates (YAML Anchors)
+# ======================================================
+_base_pin: &base_pin
+  io_type: input
+  secondary_esd: false
+
+# ======================================================
 # Project metadata (used for documentation / review)
 # ======================================================
 project:
@@ -17,3 +24,30 @@ project:
   discord: "2Charts"
   description: "A 16-bit programmable FIR filter with an integrated SPI and UART configuration interface."
   lvs_config: "lvs_config.json"
+  
+  pins:
+    - <<: *base_pin
+      name: vdd
+      io_type: power               # Override io_type
+
+    - <<: *base_pin
+      name: clk
+
+    - <<: *base_pin
+      name: rst_n
+
+    - <<: *base_pin
+      name: uart_rx
+
+    - <<: *base_pin
+      name: mosi
+
+    - <<: *base_pin
+      name: miso
+      io_type: bidirectional_24ma  # Override io_type
+
+    - <<: *base_pin
+      name: sck
+
+    - <<: *base_pin
+      name: cs_n
