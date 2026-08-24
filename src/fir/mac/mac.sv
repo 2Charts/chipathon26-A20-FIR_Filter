@@ -9,6 +9,12 @@ module mac (
     output logic signed [15:0] result_o
 );
 
+// Pipeline registers
+logic signed [16:0] sample_reg;
+logic signed [15:0] coeff_reg;
+logic enable_reg;
+logic clear_reg;
+
 logic signed [32:0] product;
 logic signed [36:0] accumulator;
 
@@ -32,14 +38,25 @@ end
 
 always_ff @(posedge clk or negedge arst_n) begin
     if (!arst_n) begin
+        sample_reg <= '0;
+        coeff_reg <= '0;
+        enable_reg <= 1'b0;
+        clear_reg <= 1'b0;
         product <= '0;
         accumulator <= '0;
         result_o <= '0;
     end else begin
-        if (enable_i) begin
-            product <= sample_i * coeff_i;
+        // Pipeline Stage 1: Register Inputs
+        sample_reg <= sample_i;
+        coeff_reg <= coeff_i;
+        enable_reg <= enable_i;
+        clear_reg <= clear_i;
+
+        // Pipeline Stage 2 & 3: Multiply and Accumulate
+        if (enable_reg) begin
+            product <= sample_reg * coeff_reg;
             
-            if (clear_i) begin
+            if (clear_reg) begin
                 accumulator <= 37'(product);
             end else begin
                 accumulator <= accumulator + 37'(product);

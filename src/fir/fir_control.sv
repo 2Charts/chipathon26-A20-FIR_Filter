@@ -73,8 +73,8 @@ module fir_control (
                     mac_clear_o = 1'b1;
                 end
 
-                // Need to wait until cnt == 17 to allow the last accumulation and result rounding to propagate
-                if (cnt == 5'd17) begin
+                // Need to wait until cnt == 18 to allow the pipelined accumulation and result rounding to propagate
+                if (cnt == 5'd18) begin
                     next_state = WRITE;
                 end
             end
