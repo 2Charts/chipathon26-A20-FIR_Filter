@@ -9,13 +9,6 @@
 # This file will be updated with more information later
 
 # ======================================================
-# Reusable Templates (YAML Anchors)
-# ======================================================
-_base_pin: &base_pin
-  io_type: input
-  secondary_esd: false
-
-# ======================================================
 # Project metadata (used for documentation / review)
 # ======================================================
 project:
@@ -26,28 +19,26 @@ project:
   lvs_config: "lvs_config.json"
   
   pins:
-    - <<: *base_pin
-      name: vdd
-      io_type: power               # Override io_type
+    - name: vdd
+      io_type: power
 
-    - <<: *base_pin
-      name: clk
+    - name: clk
+      io_type: input_cmos
 
-    - <<: *base_pin
-      name: rst_n
+    - name: rst_n
+      io_type: input_cmos
 
-    - <<: *base_pin
-      name: uart_rx
+    - name: uart_rx
+      io_type: input_cmos
 
-    - <<: *base_pin
-      name: mosi
+    - name: mosi
+      io_type: input_cmos
 
-    - <<: *base_pin
-      name: miso
-      io_type: bidirectional_24ma  # Override io_type
+    - name: miso
+      io_type: bidirectional_24ma
 
-    - <<: *base_pin
-      name: sck
+    - name: sck
+      io_type: input_cmos
 
-    - <<: *base_pin
-      name: cs_n
+    - name: cs_n
+      io_type: input_cmos
