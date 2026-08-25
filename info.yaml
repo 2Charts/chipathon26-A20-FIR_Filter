@@ -1,8 +1,8 @@
-# ----- ------ ----- ----- ------ ----- ----- ------ -----
+# ----- ------ ----- ----- ------ ----- ------ ----- -----
 # Chipathon 2026: Project configuration
 # LICENSE: Apache License Version 2.0
 # http://www.apache.org/licenses/
-# ----- ------ ----- ----- ------ ----- ----- ------ -----
+# ----- ------ ----- ----- ------ ----- ------ ----- -----
 
 # data will be pulled from main branch of the repo.
 # please be sure that the main branch contains the data you want to submit.
@@ -17,31 +17,31 @@ project:
   discord: "2Charts"
   description: "A 16-bit programmable FIR filter with an integrated SPI and UART configuration interface."
   lvs_config: "lvs_config.json"
-  
-  pins:
-    - name: vss
-      io_type: ground
 
-    - name: clk
-      io_type: input_cmos
+pins:
+  - name: vss
+    io_type: ground
 
-    - name: rst_n
-      io_type: input_cmos
+  - name: clk
+    io_type: input_cmos
 
-    - name: uart_rx
-      io_type: input_cmos
+  - name: rst_n
+    io_type: input_cmos
 
-    - name: mosi
-      io_type: input_cmos
+  - name: uart_rx
+    io_type: input_cmos
 
-    - name: miso
-      io_type: bidirectional_24ma
+  - name: mosi
+    io_type: input_cmos
 
-    - name: sck
-      io_type: input_cmos
+  - name: miso
+    io_type: bidirectional_24ma
 
-    - name: cs_n
-      io_type: input_cmos
+  - name: sck
+    io_type: input_cmos
 
-    - name: vdd
-      io_type: power
+  - name: cs_n
+    io_type: input_cmos
+
+  - name: vdd
+    io_type: power
