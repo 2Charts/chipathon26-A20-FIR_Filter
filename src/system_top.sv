@@ -15,6 +15,11 @@ module system_top # (
     
     // uart for config
     input logic uart_rx
+
+`ifdef USE_POWER_PINS
+    ,inout wire VDD,
+    inout wire VSS
+`endif
 );
 
     localparam FIFO_DEPTH = 8;
@@ -30,6 +35,25 @@ module system_top # (
         end else begin
             rst_n_meta <= 1'b1;
             rst_n_sync <= rst_n_meta;
+        end
+    end
+    
+    // Reset buffer tree: one buffered copy per subsystem
+    // This prevents a single rst_n_sync from fanning out across
+    // the entire die, which causes massive slew violations.
+    (* keep = "true" *) logic rst_n_prog;
+    (* keep = "true" *) logic rst_n_fir;
+    (* keep = "true" *) logic rst_n_spi;
+    
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rst_n_prog <= 1'b0;
+            rst_n_fir  <= 1'b0;
+            rst_n_spi  <= 1'b0;
+        end else begin
+            rst_n_prog <= rst_n_sync;
+            rst_n_fir  <= rst_n_sync;
+            rst_n_spi  <= rst_n_sync;
         end
     end
     
@@ -56,7 +80,7 @@ module system_top # (
         .TIMEOUT_MS(5)
     ) prog_inst (
         .clk(clk),
-        .arst_n(rst_n_sync),
+        .arst_n(rst_n_prog),
         .rx_line_i(uart_rx),
         .config_data_o(config_data),
         .config_wr_en_o(config_wr_en),
@@ -81,7 +105,7 @@ module system_top # (
         .coeff_addr_i(coeff_addr),
         .coeff_wr_en_i(coeff_wr_en),
         
-        .arst_n(rst_n_sync),
+        .arst_n(rst_n_fir),
         .clk(clk)
     );
     
@@ -90,7 +114,7 @@ module system_top # (
         .FIFO_DEPTH(FIFO_DEPTH)
     ) spi_inst (
         .clk(clk),
-        .arst_n(rst_n_sync),
+        .arst_n(rst_n_spi),
         
         // Data coming INTO the SPI from the FIR
         .s_axis_tdata_i(fir_to_spi_tdata),
