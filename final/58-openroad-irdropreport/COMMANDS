@@ -1,0 +1,1 @@
+openroad -exit -no_splash -metrics /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/58-openroad-irdropreport/or_metrics_out.json /usr/local/lib/python3.12/dist-packages/librelane/scripts/openroad/irdrop.tcl
