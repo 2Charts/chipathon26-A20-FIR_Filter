@@ -19,7 +19,7 @@ project:
   lvs_config: "lvs_config.json"
 
 pins:
-  - name: vss
+  - name: VSS
     io_type: ground
 
   - name: clk
@@ -43,5 +43,5 @@ pins:
   - name: cs_n
     io_type: input_cmos
 
-  - name: vdd
+  - name: VDD
     io_type: power
