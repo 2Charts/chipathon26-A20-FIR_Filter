@@ -1,0 +1,83 @@
+{
+  "project_size": {
+    "source_gds": "/Users/kanobailey/chipathon/2026/gds/A20/system_top.gds",
+    "top_cell": "system_top",
+    "layer": 0,
+    "datatype": 0,
+    "layout_dbu_microns": 0.001,
+    "rectangle_dbu": [
+      0,
+      0,
+      1110000,
+      550000
+    ],
+    "width_microns": "1110",
+    "height_microns": "550",
+    "top_cell_text": [
+      {
+        "text": "cs_n",
+        "layer": 36,
+        "datatype": 10
+      },
+      {
+        "text": "miso",
+        "layer": 36,
+        "datatype": 10
+      },
+      {
+        "text": "miso_oe",
+        "layer": 36,
+        "datatype": 10
+      },
+      {
+        "text": "sck",
+        "layer": 36,
+        "datatype": 10
+      },
+      {
+        "text": "clk",
+        "layer": 42,
+        "datatype": 10
+      },
+      {
+        "text": "mosi",
+        "layer": 42,
+        "datatype": 10
+      },
+      {
+        "text": "rst_n",
+        "layer": 42,
+        "datatype": 10
+      },
+      {
+        "text": "uart_rx",
+        "layer": 42,
+        "datatype": 10
+      },
+      {
+        "text": "VDD",
+        "layer": 46,
+        "datatype": 10
+      },
+      {
+        "text": "VSS",
+        "layer": 46,
+        "datatype": 10
+      },
+      {
+        "text": "VDD",
+        "layer": 81,
+        "datatype": 10
+      },
+      {
+        "text": "VSS",
+        "layer": 81,
+        "datatype": 10
+      }
+    ]
+  },
+  "participant_pin_count": 9,
+  "selected_variants": [
+    "BH"
+  ]
+}
