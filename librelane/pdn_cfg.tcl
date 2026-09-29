@@ -1,20 +1,5 @@
 # Copyright 2025 LibreLane Contributors
-#
-# Adapted from OpenLane
-#
-# Copyright 2020-2022 Efabless Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Adapted for Chipathon 2026 A20_BH Macro Slot
 
 source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
 source $::env(SCRIPTS_DIR)/openroad/common/set_global_connections.tcl
@@ -47,8 +32,6 @@ foreach vdd $::env(VDD_NETS) gnd $::env(GND_NETS) {
 
 set_voltage_domain -name CORE -power $::env(VDD_NET) -ground $::env(GND_NET) \
     -secondary_power $secondary
-
-
 
 if { $::env(PDN_MULTILAYER) == 1 } {
 
@@ -131,7 +114,6 @@ if { $::env(PDN_ENABLE_RAILS) == 1 } {
         -layers "$::env(PDN_RAIL_LAYER) $::env(PDN_VERTICAL_LAYER)"
 }
 
-
 # Adds the core ring if enabled.
 if { $::env(PDN_CORE_RING) == 1 } {
     if { $::env(PDN_MULTILAYER) == 1 } {
@@ -182,17 +164,209 @@ if { $::env(PDN_CORE_RING) == 1 } {
     }
 }
 
-define_pdn_grid \
-    -macro \
-    -default \
-    -name macro \
-    -starts_with POWER \
-    -halo "$::env(PDN_HORIZONTAL_HALO) $::env(PDN_VERTICAL_HALO)"
+# =============================================================================
+# Padframe power bridge (A20_BH: connect West VSS and North VDD pins to core ring)
+# =============================================================================
 
-add_pdn_connect \
-    -grid macro \
-    -layers "$::env(PDN_VERTICAL_LAYER) $::env(PDN_HORIZONTAL_LAYER)"
+set ::_PG_BRIDGE_W_UM   2.0     ;# width (Y) of the VSS and VDD bridges
+set ::_PG_M2_LAND_UM    2.0     ;# VDD Metal2 landing reach from the die edge
+set ::_PG_M3_EDGE_UM    0.20    ;# Metal3 hop start offset from the die edge
+set ::_PG_VIA_ROWS      3       ;# Via2 cut rows per stack  (Y)
+set ::_PG_VIA_COLS      3       ;# Via2 cut cols per stack  (X)  -- matches the PDN
 
-# No custom per-macro PDN grids for the workshop slot: the core
-# holds only a 20-bit counter, no SRAMs, so the generic `macro` grid
-# above covers the chip_id / logo placeholders.
+proc _pg_template_path {} {
+    if {[info exists ::env(FP_DEF_TEMPLATE)] && [file readable $::env(FP_DEF_TEMPLATE)]} {
+        return $::env(FP_DEF_TEMPLATE)
+    }
+    set cfgdir [file dirname $::env(PDN_CFG)]
+    set cfg    [file join $cfgdir config.yaml]
+    if {[file readable $cfg]} {
+        set fh [open $cfg r]; set txt [read $fh]; close $fh
+        if {[regexp {FP_DEF_TEMPLATE:\s*dir::(\S+)} $txt -> rel]} {
+            set p [file normalize [file join $cfgdir $rel]]
+            if {[file readable $p]} { return $p }
+        }
+    }
+    error "power-bridge: could not resolve FP_DEF_TEMPLATE from $cfg"
+}
+
+proc _pg_template_pin_rows {net_name} {
+    set fh [open [_pg_template_path] r]
+    set tdbu 1000
+    set rows {}
+    set in 0
+    while {[gets $fh line] >= 0} {
+        if {[regexp {UNITS\s+DISTANCE\s+MICRONS\s+(\d+)} $line -> u]} {
+            set tdbu $u; continue
+        }
+        if {[regexp {^-\s+(\S+)\s+\+\s+NET\s+(\S+)} $line -> pn nn]} {
+            set in [expr {$nn eq $net_name}]; continue
+        }
+        if {$in} {
+            if {[regexp {LAYER\s+Metal2\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)} \
+                     $line -> x1 y1 x2 y2]} {
+                lappend rows [list $y1 $y2 $x2]
+            }
+            if {[string first ";" $line] >= 0} { set in 0 }
+        }
+    }
+    close $fh
+    return [list $tdbu $rows]
+}
+
+proc _pg_template_pin_cols {net_name} {
+    set fh [open [_pg_template_path] r]
+    set tdbu 1000
+    set cols {}
+    set in 0
+    while {[gets $fh line] >= 0} {
+        if {[regexp {UNITS\s+DISTANCE\s+MICRONS\s+(\d+)} $line -> u]} {
+            set tdbu $u; continue
+        }
+        if {[regexp {^-\s+(\S+)\s+\+\s+NET\s+(\S+)} $line -> pn nn]} {
+            set in [expr {$nn eq $net_name}]; continue
+        }
+        if {$in} {
+            if {[regexp {LAYER\s+Metal2\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)\s+\(\s*(-?\d+)\s+(-?\d+)\s*\)} \
+                     $line -> x1 y1 x2 y2]} {
+                lappend cols [list $x1 $x2 $y1]
+            }
+            if {[string first ";" $line] >= 0} { set in 0 }
+        }
+    }
+    close $fh
+    return [list $tdbu $cols]
+}
+
+proc _pg_west_leg {net} {
+    set best ""
+    foreach sw [$net getSWires] {
+        foreach box [$sw getWires] {
+            if {[$box isVia]} { continue }
+            set ly [$box getTechLayer]
+            if {$ly eq "NULL" || [$ly getName] ne "Metal2"} { continue }
+            set w [expr {[$box xMax] - [$box xMin]}]
+            set h [expr {[$box yMax] - [$box yMin]}]
+            if {$h < 5 * $w} { continue }
+            if {$best eq "" || [$box xMin] < [lindex $best 0]} {
+                set best [list [$box xMin] [$box xMax]]
+            }
+        }
+    }
+    return $best
+}
+
+proc _pg_north_leg {net} {
+    set best ""
+    foreach sw [$net getSWires] {
+        foreach box [$sw getWires] {
+            if {[$box isVia]} { continue }
+            set ly [$box getTechLayer]
+            if {$ly eq "NULL" || [$ly getName] ne "Metal3"} { continue }
+            set w [expr {[$box xMax] - [$box xMin]}]
+            set h [expr {[$box yMax] - [$box yMin]}]
+            if {$w < 5 * $h} { continue }
+            if {$best eq "" || [$box yMax] > [lindex $best 1]} {
+                set best [list [$box yMin] [$box yMax]]
+            }
+        }
+    }
+    return $best
+}
+
+proc _pg_make_stack_via {block name m2 v2 m3 nrow ncol} {
+    set v [odb::dbVia_create $block $name]
+    $v setViaGenerateRule [[$block getTech] findViaGenerateRule "Via2_GEN_HH"]
+    set cs [expr {($nrow >= 4 || $ncol >= 4) ? 720 : 520}]
+    set p  [$v getViaParams]
+    $p setBottomLayer $m2
+    $p setCutLayer    $v2
+    $p setTopLayer    $m3
+    $p setXCutSize 520 ; $p setYCutSize 520
+    $p setXCutSpacing $cs ; $p setYCutSpacing $cs
+    $p setXBottomEnclosure 120 ; $p setYBottomEnclosure 120
+    $p setXTopEnclosure    120 ; $p setYTopEnclosure    120
+    $p setNumCutRows $nrow ; $p setNumCutCols $ncol
+    $v setViaParams $p
+    return $v
+}
+
+proc _pg_build_power_bridges {} {
+    if {[info exists ::_PG_DONE]} { return }
+    set ::_PG_DONE 1
+    set block [ord::get_db_block]
+    set tech  [ord::get_db_tech]
+    set dbu   [$block getDbUnitsPerMicron]
+    set m2    [$tech findLayer Metal2]
+    set v2    [$tech findLayer Via2]
+    set m3    [$tech findLayer Metal3]
+    
+    set bw    [expr {int($::_PG_BRIDGE_W_UM * $dbu)}]
+    set colv  [_pg_make_stack_via $block PG_V2_COL $m2 $v2 $m3 \
+                   $::_PG_VIA_ROWS $::_PG_VIA_COLS]
+
+    set vdd [$block findNet VDD]
+    set vss [$block findNet VSS]
+
+    # ---- VSS (West Edge) ----
+    set vss_leg [_pg_west_leg $vss]
+    if {$vss_leg eq ""} {
+        puts "\[ERROR\] power-bridge: could not find VSS core-ring leg!"
+    } else {
+        lassign $vss_leg vssL vssR
+        puts "\[INFO\] power-bridge: VSS leg x=($vssL $vssR)"
+        lassign [_pg_template_pin_rows VSS] tdbu rows
+        set sc [expr {double($dbu) / $tdbu}]
+        set sw [odb::dbSWire_create $vss "ROUTED"]
+        foreach r $rows {
+            lassign $r y1 y2 x2
+            set cy [expr {int(($y1 + $y2) * 0.5 * $sc)}]
+            set bx1 0
+            set by1 [expr {int($cy - $bw / 2)}]
+            set bx2 $vssR
+            set by2 [expr {int($cy + $bw / 2)}]
+            odb::dbSBox_create $sw $m2 $bx1 $by1 $bx2 $by2 "STRIPE"
+        }
+    }
+
+    # ---- VDD (North Edge) ----
+    set vdd_leg [_pg_north_leg $vdd]
+    if {$vdd_leg eq ""} {
+        puts "\[ERROR\] power-bridge: could not find VDD core-ring leg!"
+    } else {
+        lassign $vdd_leg vddB vddT
+        puts "\[INFO\] power-bridge: VDD leg y=($vddB $vddT)"
+        lassign [_pg_template_pin_cols VDD] tdbu cols
+        set sc [expr {double($dbu) / $tdbu}]
+        set sw  [odb::dbSWire_create $vdd "ROUTED"]
+        set nv 0
+        foreach c $cols {
+            lassign $c x1 x2 y1
+            set cx [expr {int(($x1 + $x2) * 0.5 * $sc)}]
+            set ty [expr {int(550.0 * $dbu)}]
+            
+            set bx1 [expr {int($cx - $bw / 2)}]
+            set by1 $vddB
+            set bx2 [expr {int($cx + $bw / 2)}]
+            set by2 $ty
+            
+            odb::dbSBox_create $sw $m2 $bx1 $by1 $bx2 $by2 "STRIPE"
+            
+            set vy [expr {int(($vddB + $vddT) / 2)}]
+            odb::dbSBox_create $sw $colv $cx $vy "STRIPE"
+            incr nv 1
+        }
+    }
+}
+
+if {[info commands pdngen] ne "" && [info commands _pg_pdngen_real] eq ""} {
+    rename pdngen _pg_pdngen_real
+    proc pdngen {args} {
+        set rc [uplevel 1 [list _pg_pdngen_real {*}$args]]
+        if {[catch {_pg_build_power_bridges} emsg]} {
+            puts stderr "\[ERROR\] power-bridge builder failed: $emsg"
+            puts stderr $::errorInfo
+        }
+        return $rc
+    }
+}

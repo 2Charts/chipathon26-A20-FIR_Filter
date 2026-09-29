@@ -43,7 +43,7 @@ set clocks [get_clocks $clock_port]
 
 # Output ports (miso, miso_oe)
 set core_outputs [get_ports { 
-    miso
+    miso_OUT
     miso_oe
 }] 
 
