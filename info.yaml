@@ -15,12 +15,12 @@ project:
   title: "16-bit Programmable Symmetric FIR Filter"
   team: "A20 MisterKebab"
   discord: "2Charts"
-  description: "A 16-bit programmable FIR filter with an integrated SPI and UART configuration interface."
+  description: "16-bit programmable FIR filter (up to 32 taps) @ 16 MHz CLK with SPI & UART, GF180MCU (gf180mcuD variant D)"
   lvs_config: "lvs_config.json"
-  gf_def_ready: true            # data ready for def generation with global foundries' pad frame
-  ws_def_ready: false            # data ready for def generation with wafer space pad frame
-  drc_ready: true               # data ready for integration and DRC
-  lvs_ready: true               # data ready for integrated LVS
+  gf_def_ready: true            # BH slot on the GF pad frame: 38/38 pin rects, audit green
+  ws_def_ready: false           # wafer.space pad frame not attempted yet
+  drc_ready: true               # system_top_pad_wrapper: DRC main + antenna clean
+  lvs_ready: true               # system_top_pad_wrapper: LVS "Netlists match", 26837 instances
 
 # There are 7 i/o pin types and the associated connections from the user area to the i/o pad cell
 # all control signals must be connected
