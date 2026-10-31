@@ -2,8 +2,6 @@
 meta:
   version: 3
   flow: Classic
-  substituting_steps:
-    OpenROAD.IRDropReport: null
 DESIGN_NAME: system_top_pad_wrapper
 VERILOG_FILES:
   - dir::../src/generic/regfile.sv

@@ -370,3 +370,13 @@ if {[info commands pdngen] ne "" && [info commands _pg_pdngen_real] eq ""} {
         return $rc
     }
 }
+
+if {[info commands check_power_grid] ne "" && [info commands _real_check_power_grid] eq ""} {
+    rename check_power_grid _real_check_power_grid
+    proc check_power_grid {args} {
+        if {[lsearch -exact $args "-dont_require_terminals"] == -1} {
+            lappend args -dont_require_terminals
+        }
+        return [uplevel 1 [list _real_check_power_grid {*}$args]]
+    }
+}
