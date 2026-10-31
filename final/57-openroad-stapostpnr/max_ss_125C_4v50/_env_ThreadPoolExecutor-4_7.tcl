@@ -40,22 +40,24 @@ set ::env(CELL_PAD_EXCLUDE) "gf180mcu_fd_sc_mcu7t5v0__filltie \"gf180mcu_fd_sc_m
 set ::env(DIODE_CELL) gf180mcu_fd_sc_mcu7t5v0__antenna/I
 set ::env(WELLTAP_CELL) gf180mcu_fd_sc_mcu7t5v0__filltie
 set ::env(ENDCAP_CELL) gf180mcu_fd_sc_mcu7t5v0__endcap
-set ::env(DESIGN_NAME) system_top
+set ::env(DESIGN_NAME) system_top_pad_wrapper
 set ::env(CLOCK_PERIOD) 62.5
 set ::env(CLOCK_PORT) clk
 set ::env(CLOCK_NET) clk
 set ::env(VDD_NETS) VDD
 set ::env(GND_NETS) VSS
-set ::env(DIE_AREA) "0.0 0.0 1110.0 550.0"
+set ::env(DIE_AREA) "0 0 1110 550"
 set ::env(FALLBACK_SDC) /foss/designs/chipathon26-A20-FIR_Filter/librelane/custom.sdc
 set ::env(PAD_EDGE_SPACING) 0
 set ::env(SET_RC_VERBOSE) 0
 set ::env(PDN_CONNECT_MACROS_TO_GRID) 1
 set ::env(PDN_ENABLE_GLOBAL_CONNECTIONS) 1
+set ::env(PNR_SDC_FILE) /foss/designs/chipathon26-A20-FIR_Filter/librelane/custom.sdc
 set ::env(DEDUPLICATE_CORNERS) 0
 set ::env(STA_MACRO_PRIORITIZE_NL) 1
-set ::env(CURRENT_NL) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/54-openroad-fillinsertion/system_top.nl.v
-set ::env(CURRENT_SPEF) "\"nom_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/56-openroad-rcx/nom/system_top.nom.spef \"min_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/56-openroad-rcx/min/system_top.min.spef \"max_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/56-openroad-rcx/max/system_top.max.spef"
-set ::env(CURRENT_ODB) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/55-odb-cellfrequencytables/system_top.odb
-set ::env(SAVE_SDC) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/RUN_2026-08-29_07-11-43/57-openroad-stapostpnr/system_top.sdc
+set ::env(SIGNOFF_SDC_FILE) /foss/designs/chipathon26-A20-FIR_Filter/librelane/custom.sdc
+set ::env(CURRENT_NL) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/54-openroad-fillinsertion/system_top_pad_wrapper.nl.v
+set ::env(CURRENT_SPEF) "\"nom_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/56-openroad-rcx/nom/system_top_pad_wrapper.nom.spef \"min_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/56-openroad-rcx/min/system_top_pad_wrapper.min.spef \"max_*\" /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/56-openroad-rcx/max/system_top_pad_wrapper.max.spef"
+set ::env(CURRENT_ODB) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/55-odb-cellfrequencytables/system_top_pad_wrapper.odb
+set ::env(SAVE_SDC) /foss/designs/chipathon26-A20-FIR_Filter/librelane/runs/signoff_run/57-openroad-stapostpnr/system_top_pad_wrapper.sdc
 set ::env(OPENLANE_SDC_IDEAL_CLOCKS) 0
