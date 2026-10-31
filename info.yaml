@@ -21,7 +21,7 @@ project:
   ws_def_ready: false           # wafer.space pad frame not attempted yet
   drc_ready: true               # system_top_pad_wrapper: DRC main + antenna clean
   lvs_ready: true               # system_top_pad_wrapper: LVS "Netlists match", 26837 instances
-
+  export_control: "docs/Export_Control_GF_Rev8.2.docx"   # Required export control document
 # There are 7 i/o pin types and the associated connections from the user area to the i/o pad cell
 # all control signals must be connected
 # ground: 
